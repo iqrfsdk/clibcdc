@@ -24,6 +24,19 @@ Features
 - supported programming languages: C++
 - supported operating systems: Windows
 
+Build
+---
+Build is based on [CMake](https://cmake.org/Wiki/CMake)
+There are prepared three scripts to build for:
+- Win Visual_Studio_12_2013 x86 - **build32.bat**
+- Win Visual_Studio_12_2013 x64 - **build64.bat**
+- Lin Unix Makefiles - **buildMake.sh**  
+- Lin Eclipse CDT4 - Unix Makefiles - **buildEclipse.sh**
+
+Note: instalation phase is disabled for now. It is TBD
+
+The scripts configure and generate IDE files in build subdirectory
+
 
 Functionality
 -------------
