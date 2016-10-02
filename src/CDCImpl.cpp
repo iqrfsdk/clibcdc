@@ -97,6 +97,12 @@ DSResponse CDCImpl::sendData(unsigned char* data, unsigned int dlen) {
 	return implObj->msgParser->getParsedDSResponse(implObj->lastResponse.message);
 }
 
+DSResponse CDCImpl::sendData(const std::basic_string<unsigned char>& data) {
+  CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_DATA_SEND, data);
+  implObj->processCommand(cmd);
+  return implObj->msgParser->getParsedDSResponse(implObj->lastResponse.message);
+}
+
 void CDCImpl::switchToCustom(void) {
 	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_SWITCH, uchar_str(""));
 	implObj->processCommand(cmd);

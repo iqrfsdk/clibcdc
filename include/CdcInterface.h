@@ -147,7 +147,8 @@ class CDCInterface {
 		 * @return result of data send
 		 */
 		virtual DSResponse sendData(unsigned char* data, unsigned int dlen) = 0;
-		
+    virtual DSResponse sendData(const std::basic_string<unsigned char>& data) = 0;
+
 		/** 
 		 * Switches USB class to Custom and the device is reset 5 s after this 
 		 * command is issued("U-command"). 
