@@ -387,7 +387,7 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd) {
   }
   if (cmd.msgType == MSG_DATA_SEND) {
     if (cmd.data.size() > UCHAR_MAX) {
-      THROW_EX(CDCSendException, "Data size too large");
+      THROW_EXC(CDCSendException, "Data size too large");
     }
 
     tmpStr.append(1, cmd.data.size());
@@ -438,7 +438,7 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd) {
 */
 void CDCImplPrivate::processCommand(Command& cmd) {
   if (getReceptionStopped()) {
-    THROW_EX(CDCSendException, "Reading is actually stopped")
+    THROW_EXC(CDCSendException, "Reading is actually stopped")
   }
 
   sendCommand(cmd);
@@ -446,7 +446,7 @@ void CDCImplPrivate::processCommand(Command& cmd) {
   waitForMyEvent(newMsgEvent, TM_WAIT_RESP);
 
   if (lastResponse.parseResult.msgType != cmd.msgType) {
-    THROW_EX(CDCReceiveException, "Response has bad type.");
+    THROW_EXC(CDCReceiveException, "Response has bad type.");
   }
 }
 
