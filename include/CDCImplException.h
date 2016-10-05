@@ -35,7 +35,7 @@
  * Base class of exceptions, that may occur during running of
  * CDCImpl objects.
  */
-class CDCImplException : std::exception {
+class CDCImplException : public std::exception {
 private:
 	/* Identity string of this exception class. */
 	std::string identity;
