@@ -1,0 +1,8 @@
+language: cpp
+sudo: required
+dist: trusty
+compiler:
+    - clang
+    - gcc
+script:
+    - bash buildMake.sh
