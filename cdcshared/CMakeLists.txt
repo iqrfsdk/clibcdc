@@ -45,7 +45,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src) #declaration of private impl.
 
 add_library(
-	${PROJECT_NAME}SHARED
+	${PROJECT_NAME}
+	SHARED
 	${cdc_SRC_FILES} ${cdc_INC_FILES}
 )
 
