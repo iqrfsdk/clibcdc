@@ -90,7 +90,7 @@ SPIStatus CDCImpl::getStatus(void) {
 	return implObj->msgParser->getParsedSPIStatus(implObj->lastResponse.message);
 }
 
-DSResponse CDCImpl::sendData(unsigned char* data, unsigned int dlen) {
+DSResponse CDCImpl::sendData(const unsigned char* data, unsigned int dlen) {
 	ustring dataStr(data, dlen);
 	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_DATA_SEND, dataStr);
 	implObj->processCommand(cmd);

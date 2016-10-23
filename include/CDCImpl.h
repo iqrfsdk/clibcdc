@@ -132,7 +132,7 @@ public:
 		 * @throw CDCSendException if some error occurs during sending command
 		 * @throw CDCReceiveException if some error occurs during response reception
 		 */
-		DSResponse sendData(unsigned char* data, unsigned int dlen);
+		DSResponse sendData(const unsigned char* data, unsigned int dlen);
     DSResponse sendData(const std::basic_string<unsigned char>& data);
 
 		/**

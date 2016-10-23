@@ -146,7 +146,7 @@ class CDCInterface {
 		 * @param dlen the length of data to send
 		 * @return result of data send
 		 */
-		virtual DSResponse sendData(unsigned char* data, unsigned int dlen) = 0;
+		virtual DSResponse sendData(const unsigned char* data, unsigned int dlen) = 0;
     virtual DSResponse sendData(const std::basic_string<unsigned char>& data) = 0;
 
 		/** 
