@@ -124,14 +124,14 @@ JNIEXPORT jlong JNICALL Java_com_microrisc_cdc_J_1CDCImpl_createCDCImpl
 	try {
 		jsize nameLength = env->GetStringLength(portName);
 		if (nameLength == 0) {
-			cdcImp = new CDCImpl();
+			cdcImp = ant_new CDCImpl();
 		} else {
 			const char* portNameUTF = env->GetStringUTFChars(portName, NULL);
 			if (portNameUTF == NULL) {
         env->ThrowNew(classJavaLangException, "Port Name conversion to UTF failed");
 				return 0;
 			}
-			cdcImp = new CDCImpl(portNameUTF);
+			cdcImp = ant_new CDCImpl(portNameUTF);
 			env->ReleaseStringUTFChars(portName, portNameUTF);
 		}
 	} catch (CDCImplException& e) {
@@ -248,7 +248,7 @@ JNIEXPORT jobject JNICALL Java_com_microrisc_cdc_J_1CDCImpl_stub_1getTRModuleInf
 		return NULL;
 	}
 
-	jshort* jBuffer = new jshort[ModuleInfo::SN_SIZE];
+	jshort* jBuffer = ant_new jshort[ModuleInfo::SN_SIZE];
 	for (int i = 0; i < ModuleInfo::SN_SIZE; i++) {
 		jBuffer[i] = modInfo->serialNumber[i];
 	}
@@ -267,7 +267,7 @@ JNIEXPORT jobject JNICALL Java_com_microrisc_cdc_J_1CDCImpl_stub_1getTRModuleInf
 		return NULL;
 	}
 
-	jBuffer = new jshort[ModuleInfo::BUILD_SIZE];
+	jBuffer = ant_new jshort[ModuleInfo::BUILD_SIZE];
 	for (int i = 0; i < ModuleInfo::BUILD_SIZE; i++) {
 		jBuffer[i] = modInfo->osBuild[i];
 	}
@@ -327,10 +327,10 @@ JNIEXPORT jint JNICALL Java_com_microrisc_cdc_J_1CDCImpl_stub_1sendData
 
   DEBUG_TRC(PAR(cdcRef));
 
-  jshort* jDataBuff = new jshort[jDataLen];
+  jshort* jDataBuff = ant_new jshort[jDataLen];
 	env->GetShortArrayRegion(jData, 0, jDataLen, jDataBuff);
 
-	unsigned char* cdcData = new unsigned char[jDataLen];
+	unsigned char* cdcData = ant_new unsigned char[jDataLen];
 	for (int i = 0; i < jDataLen; i++) {
 		cdcData[i] = jDataBuff[i] & 0xFF;
 	}
@@ -379,7 +379,7 @@ void stubListener(unsigned char data[], unsigned int dataLen) {
 
   DEBUG_TRC(PAR(data) << PAR(dataLen));
 
-  jMsgBuffer = new jshort[dataLen];
+  jMsgBuffer = ant_new jshort[dataLen];
   attachRes = jvm->AttachCurrentThread((void **)&env, NULL);
   
   while (attachRes == JNI_OK) {

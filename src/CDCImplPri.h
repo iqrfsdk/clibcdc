@@ -78,7 +78,7 @@ public:
   std::thread readMsgHandle;
 
   /*
-  * Signal for main thread, that a new mesage-respond was read from COM-port.
+  * Signal for main thread, that a mesage-respond was read from COM-port.
   */
   HANDLE newMsgEvent;
 
@@ -178,5 +178,8 @@ public:
 
   HANDLE openPort(const std::string& portName);
   void closePort(HANDLE & portHandle);
+
+  unsigned char* m_transmitBuffer;
+  DWORD m_transmitBufferLen;
 
 };

@@ -89,7 +89,7 @@ void printResponse(unsigned char* response, unsigned int length) {
 
     unsigned char value = *(response + INT_VALUE_POS);
 
-    unsigned char* fullTemperatureValue = new unsigned char[FULL_VALUE_LENGTH];
+    unsigned char* fullTemperatureValue = ant_new unsigned char[FULL_VALUE_LENGTH];
     memcpy(fullTemperatureValue, response+FULL_VALUE_POS, FULL_VALUE_LENGTH);
     unsigned char fractialPart = *fullTemperatureValue;
 
@@ -109,7 +109,7 @@ void receiveData(unsigned char* data, unsigned int length) {
         return;
     }
 
-    unsigned char* msgHeader = new unsigned char[HEADER_LENGTH];
+    unsigned char* msgHeader = ant_new unsigned char[HEADER_LENGTH];
     memcpy(msgHeader, data, HEADER_LENGTH);
 
     if ( isConfirmation(msgHeader) ) {
@@ -134,7 +134,10 @@ void receiveData(unsigned char* data, unsigned int length) {
 
 int main(int argc, char** argv)
 {
-	std::string port_name;
+#if defined(WIN32) && defined(_DEBUG)
+  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+  std::string port_name;
 
 	if (argc < 2) {
 		std::cerr << "Usage" << std::endl;
@@ -150,7 +153,7 @@ int main(int argc, char** argv)
 
 	CDCImpl* testImp = NULL;
 	try {
-		testImp = new CDCImpl(port_name.c_str());
+		testImp = ant_new CDCImpl(port_name.c_str());
 
 		bool test = testImp->test();
 

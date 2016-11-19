@@ -56,7 +56,7 @@ public:
 
 	/* Results of processing of special state. */
 	struct StateProcResult {
-		unsigned int newState;		// new state
+		unsigned int newState;		// ant_new state
 		unsigned int lastPosition;  // last processed position
 		bool formatError;           // indication of format error
 	};
@@ -645,7 +645,7 @@ ParseResult CDCMessageParserPrivate::parseData(ustring& data) {
 
 /* PUBLIC INTERFACE. */
 CDCMessageParser::CDCMessageParser() {
-	implObj = new CDCMessageParserPrivate();
+	implObj = ant_new CDCMessageParserPrivate();
 	//InitializeCriticalSection(&csUI);
 }
 
@@ -666,14 +666,14 @@ ParseResult CDCMessageParser::parseData(ustring& data) {
 DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
 	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
-	DeviceInfo* devInfo = new DeviceInfo();
+	DeviceInfo* devInfo = ant_new DeviceInfo();
 
 	// type parsing
 	size_t firstHashPos = data.find('#', 3);
 	size_t typeSize = firstHashPos - 3;
 	ustring typeStr = data.substr(3, typeSize);
 
-	devInfo->type = new char[typeSize + 1];
+	devInfo->type = ant_new char[typeSize + 1];
 	typeStr.copy ((unsigned char*)devInfo->type, typeStr.size()); //strcpy(devInfo->type, (const char*)typeStr.c_str());
 	devInfo->typeLen = typeSize;
 
@@ -682,7 +682,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
     size_t fmSize = secondHashPos - firstHashPos - 1;
 	ustring fmStr = data.substr(firstHashPos+1, fmSize);
 
-	devInfo->firmwareVersion = new char[fmSize + 1];
+	devInfo->firmwareVersion = ant_new char[fmSize + 1];
 	fmStr.copy ((unsigned char*)devInfo->firmwareVersion, fmStr.size()); //strcpy(devInfo->firmwareVersion, (const char*)fmStr.c_str());
 	devInfo->fvLen = fmSize;
 
@@ -691,7 +691,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
     size_t snSize = crPos - secondHashPos - 1;
 	ustring snStr = data.substr(secondHashPos+1, snSize);
 
-    devInfo->serialNumber = new char[snSize + 1];
+    devInfo->serialNumber = ant_new char[snSize + 1];
     snStr.copy ((unsigned char*)devInfo->serialNumber, snStr.size()); //strcpy(devInfo->serialNumber, (const char*)snStr.c_str());
 	devInfo->snLen = snSize;
 
@@ -702,7 +702,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
 ModuleInfo* CDCMessageParser::getParsedModuleInfo(ustring& data) {
 	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
-	ModuleInfo* modInfo = new ModuleInfo();
+	ModuleInfo* modInfo = ant_new ModuleInfo();
     size_t msgBodyPos = 4;
 
     modInfo->serialNumber[0] = data.at(msgBodyPos);

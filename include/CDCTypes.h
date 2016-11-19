@@ -38,4 +38,14 @@ enum MessageType {
 	MSG_ASYNC
 };
 
+#ifdef WIN32
+#ifdef _DEBUG
+#define ant_new new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#else
+#define ant_new new
+#endif
+#else
+#define ant_new new
+#endif
+
 #endif //__CDCTypes_h_

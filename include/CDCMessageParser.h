@@ -64,7 +64,7 @@ private:
 
 public:
 	/**
-	 * Constructs new message parser.
+	 * Constructs message parser.
 	 */
 	CDCMessageParser();
 

@@ -33,6 +33,7 @@
 #include <CDCImplException.h>
 #include <CDCSendException.h>
 #include <CDCReceiveException.h>
+#include "CDCTypes.h"
 
 /**
  * Forward declaration of CDCImpl implementation class.
@@ -52,7 +53,7 @@ class CDCImplPrivate;
  * - If some serious error occurs during reading from COM-port, the reading thread is
  *   automaticly stopped. Stopped thread is currently not possible to start
  *   again - for continuous working you must destruct the object and
- *   construct the new one. Activity of reading thread can be tested via
+ *   construct the another one. Activity of reading thread can be tested via
  *   @c isReceptionStopped function. If some method from public interface is
  *   called after the reading thread was stopped, exception will be thrown.
  * - Information about reading errors can be received via @c getLastReceptionError
@@ -69,13 +70,13 @@ private:
 
 public:
 		/**
-		 * Creates new instance with COM-port set to COM1.
+		 * Creates instance with COM-port set to COM1.
 		 * @throw CDCImplException if some error occurs during initialization
 		 */
 		CDCImpl();
 
 		/**
-		 * Creates new instance with specified COM-port.
+		 * Creates instance with specified COM-port.
 		 * @param commPort COM-port to communicate with
 		 * @throw CDCImplException if some error occurs during initialization
 		 */

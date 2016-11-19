@@ -327,7 +327,7 @@ void CDCImplPrivate::sendCommand(Command& cmd) {
 void CDCImplPrivate::setMyEvent(HANDLE evnt)
 {
   if (!SetEvent(evnt)) {
-    THROW_EXC(CDCImplException, "Signaling new message event failed with error " << GetLastError());
+    THROW_EXC(CDCImplException, "Signaling anew message event failed with error " << GetLastError());
   }
 }
 
@@ -342,7 +342,7 @@ void CDCImplPrivate::createMyEvent(HANDLE & evnt)
 {
   evnt = CreateEvent(NULL, TRUE, FALSE, NULL);
   if (evnt == NULL) {
-    THROW_EXC(CDCImplException, "Create new message event failed with error " << GetLastError());
+    THROW_EXC(CDCImplException, "Create anew message event failed with error " << GetLastError());
   }
 }
 
@@ -385,6 +385,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName) {
     THROW_EX(CDCImplException, "Port name character conversion failed");
   }
   portNameU = wcharCommPort;
+  delete[] wcharCommPort;
 #else
   portNameU = portName;
 #endif
@@ -406,6 +407,8 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName) {
   if (portHandle == INVALID_HANDLE_VALUE) {
     THROW_EXC(CDCImplException, "Port handle creation failed with error " << GetLastError());
   }
+
+  delete[] completePortName;
 
   DCB dcb;
   //SecureZeroMemory(&dcb, sizeof(DCB));
@@ -465,7 +468,7 @@ void CDCImplPrivate::closePort(HANDLE & portHandle)
 wchar_t* convertToWideChars(const char* charStr) {
   size_t charsToConvert = mbstowcs(NULL, charStr, strlen(charStr));
   size_t maxCount = charsToConvert + 1;
-  wchar_t* wcStr = new wchar_t[charsToConvert + 1];
+  wchar_t* wcStr = ant_new wchar_t[charsToConvert + 1];
   memcpy(wcStr, '\0', (charsToConvert + 1) * sizeof(wchar_t));
   size_t convertedChars = mbstowcs(wcStr, charStr, maxCount);
   /*
@@ -513,7 +516,7 @@ LPTSTR getCompletePortName(LPCTSTR portName) {
   LPTSTR portPrefix = "\\\\.\\";
 
   int completeSize = lstrlen(portPrefix) + lstrlen(portName);
-  LPTSTR completePortName = new TCHAR[completeSize + 1];
+  LPTSTR completePortName = ant_new TCHAR[completeSize + 1];
   memset(completePortName, '\0', (completeSize + 1) * sizeof(TCHAR));
   if (lstrcat(completePortName, portPrefix) == NULL) {
     return NULL;

@@ -31,11 +31,11 @@ inline const unsigned char* uchar_str(const char* s){
 
 /* --- PUBLIC INTERFACE */
 CDCImpl::CDCImpl() {
-	implObj = new CDCImplPrivate();
+	implObj = ant_new CDCImplPrivate();
 }
 
 CDCImpl::CDCImpl(const char* commPort) {
-    implObj = new CDCImplPrivate(commPort);
+    implObj = ant_new CDCImplPrivate(commPort);
 }
 
 CDCImpl::~CDCImpl() {
@@ -135,7 +135,7 @@ void CDCImpl::unregisterAsyncMsgListener(void) {
 //////////////////////////////////////
 
 /*
-* Creates new instance with COM-port set to COM1.
+* Creates instance with COM-port set to COM1.
 */
 CDCImplPrivate::CDCImplPrivate()
 {
@@ -143,7 +143,7 @@ CDCImplPrivate::CDCImplPrivate()
 }
 
 /*
-* Creates new instance with specified COM-port.
+* Creates instance with specified COM-port.
 * @param commPort COM-port to communicate with
 */
 CDCImplPrivate::CDCImplPrivate(const char* portName)
@@ -155,6 +155,9 @@ CDCImplPrivate::CDCImplPrivate(const char* portName)
 /* Encapsulates basic initialization process. */
 void CDCImplPrivate::init() {
   //createNewLogFile();
+  m_transmitBuffer = ant_new unsigned char[1024];;
+  m_transmitBufferLen = 1024;
+
   portHandle = openPort(m_commPort);
 
   createMyEvent(newMsgEvent);
@@ -167,7 +170,7 @@ void CDCImplPrivate::init() {
 
   receptionStopped = false;
 
-  msgParser = new CDCMessageParser();
+  msgParser = ant_new CDCMessageParser();
 
   resetMyEvent(readStartEvent);
 
@@ -209,6 +212,7 @@ CDCImplPrivate::~CDCImplPrivate()
   closePort(portHandle);
 
   delete msgParser;
+  delete[] m_transmitBuffer;
 
   //flog.close();
 }
@@ -267,7 +271,7 @@ std::string CDCImplPrivate::cloneLastReceptionError() {
 /*
 * Process specified message. First of all, the message is parsed.
 * If the message is asynchronous message, then  registered listener(if exists)
-* is called. Otherwise, last response is updated and "new message"
+* is called. Otherwise, last response is updated and "anew message"
 * signal for main thread is set.
 * @throw CDCReceiveException
 */
@@ -277,7 +281,7 @@ void CDCImplPrivate::processMessage(ParsedMessage& parsedMessage) {
     if (asyncListener != NULL) {
       ustring userData = msgParser->getParsedDRData(parsedMessage.message);
 
-      unsigned char* userDataBytes = new unsigned char[userData.length() + 1];
+      unsigned char* userDataBytes = ant_new unsigned char[userData.length() + 1];
       userData.copy(userDataBytes, userData.length());
       userDataBytes[userData.length()] = '\0';
 
@@ -408,10 +412,17 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd) {
   }
   tmpStr.append(1, 0x0D);
 
+  size_t sz = tmpStr.size();
+  if (m_transmitBufferLen < sz) { //realocate
+    delete[] m_transmitBuffer;
+    m_transmitBuffer = ant_new unsigned char[sz];
+    m_transmitBufferLen = sz;
+  }
+
   BuffCommand buffCmd;
-  buffCmd.cmd = new unsigned char[tmpStr.size()];
-  tmpStr.copy(buffCmd.cmd, tmpStr.size());
-  buffCmd.len = tmpStr.size();
+  buffCmd.cmd = m_transmitBuffer;
+  tmpStr.copy(buffCmd.cmd, sz);
+  buffCmd.len = sz;
 
   return buffCmd;
 }
@@ -458,7 +469,7 @@ const char* LOG_FILE = "cdclib.log";
 // file logging object
 fstream flog;
 
-// creates new logging file
+// creates logging file
 void createNewLogFile() {
 flog.open(LOG_FILE);
 if (flog.fail() || flog.bad()) {
