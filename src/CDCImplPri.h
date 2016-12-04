@@ -16,20 +16,26 @@
 
 #pragma once
 
+#include "CDCTypes.h"
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 #include <CDCMessageParser.h>
 #include <map>
 #include <thread>
 #include <mutex>
+#include <mutex>
 
-typedef unsigned long DWORD;
 #ifdef WIN32
-typedef void* HANDLE;
+//typedef void* HANDLE;
 static const DWORD scond = 1000;
 #else
+typedef unsigned long DWORD;
 typedef int HANDLE;
 static const DWORD scond = 1;
-#endif
 typedef void* LPVOID;
+#endif
 
 /*
 * Implementation class.

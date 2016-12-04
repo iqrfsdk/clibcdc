@@ -38,6 +38,10 @@ enum MessageType {
 	MSG_ASYNC
 };
 
+#if defined _WIN32 || defined _WIN64
+#define WIN32
+#endif
+
 #ifdef WIN32
 #ifdef _DEBUG
 #define ant_new new(_NORMAL_BLOCK, __FILE__, __LINE__)
