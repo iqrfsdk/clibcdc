@@ -2,6 +2,8 @@ project (clibcdc)
 
 cmake_minimum_required(VERSION 2.8)
 
+find_package(JNI)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -37,7 +39,11 @@ add_subdirectory(cdcshared)
 add_subdirectory(example)
 
 #javastub build
-add_subdirectory(cdc_javastub)
+if (JNI_FOUND)
+  add_subdirectory(cdc_javastub)
+else()
+  message("Java not found => cdc_javastub cannot be configured")
+endif()
 
 # Configure config file.
 # This file specifies actions performed and variables exported when using find_package on this project.
