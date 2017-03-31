@@ -1,3 +1,6 @@
+#!/bin/bash
+# Script for building clibcdc on Linux machine
+
 project=clibcdc
 
 #expected build dir structure
@@ -15,4 +18,3 @@ popd
 
 #build from generated build environment
 cmake --build ${builddir}
-

@@ -6,7 +6,7 @@
 The cLibCDC library intended usage is to provide programming language means for communication between PC and IQRF USB device, equipped with the firmware supporting the USB CDC IQRF mode.
 
 The library is very lightweight and its usage is simple. No handling of some complex settings is required. When a user wants to communicate with some USB device, then she simply links the library to his program and uses the library's public interface functions.
-  
+
 The library implementation is based on encapsulation of commands, sent from PC to USB device, into programming language's functions. More detailed information about that commands are in document ["CDC Implementation in IQRF USB devices, User's Guide"](http://www.iqrf.org/weben/downloads.php?id=196).
 
 
@@ -23,11 +23,11 @@ The library implementation is based on encapsulation of commands, sent from PC t
 
 Build is based on [CMake](https://cmake.org/Wiki/CMake)
 There are prepared three scripts to build for:
- 
+
  * Win Visual_Studio_12_2013 x86 - [**build32.bat**](https://github.com/iqrfsdk/clibcdc/blob/master/build32.bat)
  * Win Visual_Studio_12_2013 x64 - [**build64.bat**](https://github.com/iqrfsdk/clibcdc/blob/master/build64.bat)
- * Lin Unix Makefiles - [**buildMake.sh**](https://github.com/iqrfsdk/clibcdc/blob/master/buildMake.sh.bat)
- * Lin Eclipse CDT4 - Unix Makefiles - [**buildEclipse.sh**](https://github.com/iqrfsdk/clibcdc/blob/master/buildEclipse.sh.bat)
+ * Lin Unix Makefiles - [**buildMake.sh**](https://github.com/iqrfsdk/clibcdc/blob/master/buildMake.sh)
+ * Lin Eclipse CDT4 - Unix Makefiles - [**buildEclipse.sh**](https://github.com/iqrfsdk/clibcdc/blob/master/buildEclipse.sh)
 
 Note: instalation phase is disabled for now. It is TBD
 
@@ -42,7 +42,7 @@ Before the library can be used, it must be correctly initialized. It can be used
  * On Linux system the default communication port is set to "/dev/ttyACM0".
 
 The library implements particular commands in the form of functions which a user can call. Because of nature of communication, the library defines inner timeouts for handling of operations. Values of these timeouts is usually set to 5000 ms. User defined timeouts settings are not currently supported.
- 
+
 Receiving of asynchronous messages (those, which have "DR" prefix) is performed via message listener. Message listener is user defined function, which will be called when asynchronous message comes. Message listener must have specific prototype and user registers it with the libary via special function. User can have registered at most one listener with the library.
 
 ### CAUTION
