@@ -1,6 +1,7 @@
 # cLibCDC
 
 [![Build Status](https://travis-ci.org/iqrfsdk/clibcdc.svg?branch=master)](https://travis-ci.org/iqrfsdk/clibcdc)
+[![Build Status](https://img.shields.io/appveyor/ci/spinarr/clibcdc/master.svg)](https://ci.appveyor.com/project/spinarr/clibcdc)
 [![Apache License](https://img.shields.io/badge/license-APACHE2-blue.svg)](https://github.com/iqrfsdk/clibcdc/blob/master/LICENSE)
 
 The cLibCDC library intended usage is to provide programming language means for communication between PC and IQRF USB device, equipped with the firmware supporting the USB CDC IQRF mode.
