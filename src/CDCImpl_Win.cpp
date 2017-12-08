@@ -234,7 +234,7 @@ int CDCImplPrivate::readMsgThread() {
             break;
 
           case (WAIT_OBJECT_0 + 1) :
-            cout << "End reading thread..." << endl;
+            //cout << "End reading thread..." << endl;
             run = false;
 
           case WAIT_TIMEOUT:
