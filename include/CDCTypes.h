@@ -35,7 +35,8 @@ typedef std::basic_string<unsigned char> ustring;
 enum MessageType {
 	MSG_ERROR, MSG_TEST, MSG_RES_USB, MSG_RES_TR, MSG_USB_INFO,
 	MSG_TR_INFO, MSG_USB_CONN, MSG_SPI_STAT, MSG_DATA_SEND, MSG_SWITCH,
-	MSG_ASYNC
+	MSG_ASYNC, MSG_MODE_NORMAL, MSG_MODE_PROGRAM, MSG_UPLOAD_DOWNLOAD,
+        MSG_DOWNLOAD_DATA
 };
 
 #if defined _WIN32 || defined _WIN64

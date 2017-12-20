@@ -125,6 +125,9 @@ public:
     /* Processes state 50. */
 	StateProcResult processAsynData(ustring& data, unsigned int pos);
 
+	/* Processes state 95. */
+	StateProcResult processPMRespData(ustring& data, unsigned int pos);
+
 	 /* Switch function of processing some special state. */
 	StateProcResult processSpecialState(unsigned int state, ustring& data,
 		unsigned int pos);
@@ -234,8 +237,8 @@ void CDCMessageParserPrivate::insertMultiTypeStatesInfo(unsigned int states[],
 
 /* Inits states info map. */
 void CDCMessageParserPrivate::initStatesInfoMap(void) {
-	unsigned int multiTypeStates[] = { 0, 1, 9, 16, 33 };
-	insertMultiTypeStatesInfo(multiTypeStates, 5);
+	unsigned int multiTypeStates[] = { 0, 1, 9, 16, 33, 58, 79, 95};
+	insertMultiTypeStatesInfo(multiTypeStates, 8);
 
 	unsigned int errStates[] = { 2, 3, 4, 5 };
 	insertStatesInfo(errStates, 4, MSG_ERROR);
@@ -271,6 +274,19 @@ void CDCMessageParserPrivate::initStatesInfoMap(void) {
 
 	unsigned int switchStates[] = { 53, 54, 55, 56, 57 };
 	insertStatesInfo(switchStates, 5,  MSG_SWITCH);
+        
+	unsigned int modeNormal[] = { 69, 70, 71, 72, 73, 74, 75, 76, 77, 78 };
+	insertStatesInfo(modeNormal, 10,  MSG_MODE_NORMAL);
+        
+	unsigned int modeProgram[] = { 59, 60, 61, 62, 63, 64, 65, 66, 67, 68 };
+	insertStatesInfo(modeProgram, 10,  MSG_MODE_PROGRAM);
+        
+	unsigned int resUploadDownload[] = { 80, 81, 82, 83, 84, 85, 86, 
+                                             87, 88, 89, 90, 91, 92, 93};
+	insertStatesInfo(resUploadDownload, 17,  MSG_UPLOAD_DOWNLOAD);
+        
+        unsigned int dataDownload[] = { 96, 97 };
+	insertStatesInfo(dataDownload, 2,  MSG_DOWNLOAD_DATA);
 }
 
 /* Inserts transition into transition map. */
@@ -292,6 +308,7 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
 	insertTransition(1, 'S', 29);
 	insertTransition(1, 'D', 33);
 	insertTransition(1, 'U', 53);
+	insertTransition(1, 'P', 58);
 
 	// ERR
 	insertTransition(2, 'R', 3);
@@ -373,6 +390,61 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
     insertTransition(54, 'O', 55);
     insertTransition(55, 'K', 56);
 	insertTransition(56, 0x0D, 57);
+        
+	// Programming
+	insertTransition(58, 'E', 59);
+	insertTransition(58, 'T', 69);
+	insertTransition(58, 'M', 79);
+        
+	// Enter programming mode
+	insertTransition(59, ':', 60);
+	insertTransition(60, 'O', 61);
+	insertTransition(60, 'E', 64);
+	insertTransition(61, 'K', 62);
+	insertTransition(62, 0x0D, 63);
+	insertTransition(64, 'R', 65);
+	insertTransition(65, 'R', 66);
+	insertTransition(66, '1', 67);
+	insertTransition(67, 0x0D, 68);
+        
+	// Terminate programming mode
+	insertTransition(69, ':', 70);
+	insertTransition(70, 'O', 71);
+	insertTransition(70, 'E', 74);
+	insertTransition(71, 'K', 72);
+	insertTransition(72, 0x0D, 73);
+	insertTransition(74, 'R', 75);
+	insertTransition(75, 'R', 76);
+	insertTransition(76, '1', 77);
+	insertTransition(77, 0x0D, 78);
+        
+	// Upload/Download
+	// handled via special function
+	insertTransition(79, ':', 95);
+	//insertTransition(79, data, 96);
+        
+	// Upload/Error
+	insertTransition(80, 'O', 81);
+	insertTransition(80, 'E', 84);
+        insertTransition(80, 'B', 89);
+	insertTransition(81, 'K', 82);
+	insertTransition(82, 0x0D, 83);
+	insertTransition(84, 'R', 85);
+	insertTransition(85, 'R', 86);
+	insertTransition(86, '2', 87);
+	insertTransition(86, '3', 87);
+	insertTransition(86, '4', 87);
+	insertTransition(86, '5', 87);
+	insertTransition(86, '6', 87);
+	insertTransition(86, '7', 87);
+	insertTransition(87, 0x0D, 88);
+	insertTransition(89, 'U', 90);
+	insertTransition(90, 'S', 91);
+	insertTransition(91, 'Y', 92);
+	insertTransition(92, 0x0D, 93);
+        
+	// Download Data
+	insertTransition(96, 0x0D, 97);
 }
 
 /* Inits finite states set. */
@@ -390,6 +462,14 @@ void CDCMessageParserPrivate::initFiniteStates(void) {
 	finiteStates.insert(52);
 	finiteStates.insert(57);
 	finiteStates.insert(103);
+	finiteStates.insert(63);
+	finiteStates.insert(68);
+	finiteStates.insert(73);
+	finiteStates.insert(78);
+	finiteStates.insert(83);
+	finiteStates.insert(88);
+	finiteStates.insert(93);
+	finiteStates.insert(97);
 }
 
 /* Inits finite states set. */
@@ -397,6 +477,7 @@ void CDCMessageParserPrivate::initSpecialStates(void) {
 	specialStates.insert(17);
 	specialStates.insert(21);
 	specialStates.insert(50);
+        specialStates.insert(95);
 }
 
 /* Initializes spiModes set. */
@@ -571,6 +652,30 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processAsynDat
 	return procResult;
 }
 
+/* Processes state 95. Heuristic - error/upload message or valid download data */
+CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processPMRespData(ustring& data,
+		unsigned int pos) {
+	StateProcResult procResult = { 95, pos, false };
+
+	if (pos == (data.size() - 1)) {
+		return procResult;
+	}
+
+        // Check length of message with error codes
+        if (data.size() == 7 || data.size() == 9) {
+                // Error message
+                procResult.newState = 80;
+                procResult.lastPosition = pos - 1;
+        } else {
+                // Message length should be 5 or 36. However, we threat 
+                // all message lengths other than 7 and 9 as download data.
+                procResult.newState = 96;
+                procResult.lastPosition = data.size()-2;
+        }
+
+	return procResult;
+}
+
 /*
  * Processes specified special state.
  */
@@ -583,6 +688,8 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processSpecial
 			return processTRInfo(data, pos);
 		case 50:
 			return processAsynData(data, pos);
+		case 95:
+			return processPMRespData(data, pos);
 	}
 
 	// error - invalid parser state
@@ -783,6 +890,122 @@ ustring CDCMessageParser::getParsedDRData(ustring& data) {
     size_t userDataStart = 5;
 	size_t userDataLen = data.length() - 1 - userDataStart;
 	ustring userData = data.substr(5, userDataLen);
+
+	//LeaveCriticalSection(&csUI);
+	return userData;
+}
+
+PTEResponse CDCMessageParser::getParsedPEResponse(ustring& data) {
+	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
+
+	size_t msgBodyPos = 4;
+	size_t bodyLen = data.length() - 1 - msgBodyPos;
+	ustring msgBody = data.substr(msgBodyPos, bodyLen);
+
+	if (msgBody == uchar_str("OK")) {
+        //LeaveCriticalSection(&csUI);
+		return PTEResponse::OK;
+	}
+
+	if (msgBody == uchar_str("ERR1")) {
+		//LeaveCriticalSection(&csUI);
+		return PTEResponse::ERR1;
+	}
+
+	//LeaveCriticalSection(&csUI);
+
+	// error - unknown type of reponse
+	std::stringstream excStream;
+	excStream << "Unknown PE response value: " << msgBody.c_str();
+	throw CDCMessageParserException((excStream.str()).c_str());
+}
+
+PTEResponse CDCMessageParser::getParsedPTResponse(ustring& data) {
+	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
+
+	size_t msgBodyPos = 4;
+	size_t bodyLen = data.length() - 1 - msgBodyPos;
+	ustring msgBody = data.substr(msgBodyPos, bodyLen);
+
+	if (msgBody == uchar_str("OK")) {
+        //LeaveCriticalSection(&csUI);
+		return PTEResponse::OK;
+	}
+
+	if (msgBody == uchar_str("ERR1")) {
+		//LeaveCriticalSection(&csUI);
+		return PTEResponse::ERR1;
+	}
+
+	//LeaveCriticalSection(&csUI);
+
+	// error - unknown type of reponse
+	std::stringstream excStream;
+	excStream << "Unknown PT response value: " << msgBody.c_str();
+	throw CDCMessageParserException((excStream.str()).c_str());
+}
+
+PMResponse CDCMessageParser::getParsedPMResponse(ustring& data) {
+	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
+
+	size_t msgBodyPos = 4;
+	size_t bodyLen = data.length() - 1 - msgBodyPos;
+	ustring msgBody = data.substr(msgBodyPos, bodyLen);
+
+	if (msgBody == uchar_str("OK")) {
+        //LeaveCriticalSection(&csUI);
+		return PMResponse::OK;
+	}
+
+	if (msgBody == uchar_str("ERR2")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::ERR2;
+	}
+
+	if (msgBody == uchar_str("ERR3")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::ERR3;
+	}
+	
+	if (msgBody == uchar_str("ERR4")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::ERR4;
+	}
+	
+	if (msgBody == uchar_str("ERR5")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::ERR5;
+	}
+	
+	if (msgBody == uchar_str("ERR6")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::ERR6;
+	}
+	
+	if (msgBody == uchar_str("ERR7")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::ERR7;
+	}
+	
+	if (msgBody == uchar_str("BUSY")) {
+		//LeaveCriticalSection(&csUI);
+		return PMResponse::BUSY;
+	}
+
+	//LeaveCriticalSection(&csUI);
+
+	// error - unknown type of reponse
+	std::stringstream excStream;
+	excStream << "Unknown PM response value: " << msgBody.c_str();
+	throw CDCMessageParserException((excStream.str()).c_str());
+}
+
+ustring CDCMessageParser::getParsedPMData(ustring& data) {
+	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
+
+	size_t userDataStart = 4;
+	size_t userDataLen = data.length() - 1 - userDataStart;
+	ustring userData = data.substr(userDataStart, userDataLen);
 
 	//LeaveCriticalSection(&csUI);
 	return userData;

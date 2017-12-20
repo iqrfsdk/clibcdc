@@ -81,6 +81,19 @@ struct SPIStatus {
  */
 enum DSResponse {OK, ERR, BUSY};
 
+/**
+ * Response information of "PM-command"(upload data). Its precise meaning
+ * is according to: "CDC Implementation in IQRF USB devices User Guide".
+ */
+enum class PMResponse {OK, ERR2, ERR3, ERR4, ERR5, ERR6, ERR7, BUSY};
+
+/**
+ * Response information of "PE-command"(enter programming mode) and 
+ * "PT-command"(terminate programming mode). Its precise meaning
+ * is according to: "CDC Implementation in IQRF USB devices User Guide".
+ */
+enum class PTEResponse {OK, ERR1};
+
 /** 
  * Read listener, which will be called by asynchronous message reception. 
  * The first parameter is a pointer to received message data.
@@ -155,6 +168,36 @@ class CDCInterface {
 		 */
 		virtual void switchToCustom(void) = 0;
 		
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		virtual PTEResponse enterProgrammingMode(void) = 0;
+                
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		virtual PTEResponse terminateProgrammingMode(void) = 0;
+
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		virtual PMResponse upload(unsigned char target, const unsigned char* data, unsigned int dlen) = 0;
+		virtual PMResponse upload(unsigned char target, const std::basic_string<unsigned char>& data) = 0;
+
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		virtual PMResponse download(unsigned char target, const unsigned char* inputData, 
+                                    unsigned int inputDlen, unsigned char* outputData, 
+                                    unsigned int outputDlen, unsigned int &len) = 0;
+		virtual PMResponse download(unsigned char target, 
+                                    const std::basic_string<unsigned char>& inputData,
+                                    std::basic_string<unsigned char>& outputData) = 0;    
+                
 		/** 
 		 * Registers user-defined listener of asynchronous messages("DR-messages")
 		 * reception during run of this library. Data of each message are passed
