@@ -7,42 +7,42 @@ project(cdc)
 #platform dependant parts of the private implementation 
 if (WIN32) 
 	set(CDCPlatforSpec_SRC
-		${CMAKE_SOURCE_DIR}/src/CDCImpl_Win.cpp
+		${clibcdc_CMAKE_SOURCE_DIR}/src/CDCImpl_Win.cpp
 	)
 else()
 	set(CDCPlatforSpec_SRC
-		${CMAKE_SOURCE_DIR}/src/CDCImpl_Lin.cpp
+		${clibcdc_CMAKE_SOURCE_DIR}/src/CDCImpl_Lin.cpp
 	)
 endif()
 
 # Specify source and header files.
 set(cdc_SRC_FILES
 	${CDCPlatforSpec_SRC}
-	${CMAKE_SOURCE_DIR}/src/CDCImpl.cpp
-	${CMAKE_SOURCE_DIR}/src/CDCImplException.cpp
-	${CMAKE_SOURCE_DIR}/src/CDCMessageParser.cpp
-	${CMAKE_SOURCE_DIR}/src/CDCMessageParserException.cpp
-	${CMAKE_SOURCE_DIR}/src/CDCReceiveException.cpp
-	${CMAKE_SOURCE_DIR}/src/CDCSendException.cpp
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCImpl.cpp
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCImplException.cpp
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCMessageParser.cpp
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCMessageParserException.cpp
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCReceiveException.cpp
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCSendException.cpp
 )
 
 set(cdc_INC_FILES
-	${CMAKE_SOURCE_DIR}/include/CDCImpl.h
-	${CMAKE_SOURCE_DIR}/include/CDCImplException.h
-	${CMAKE_SOURCE_DIR}/include/CdcInterface.h
-	${CMAKE_SOURCE_DIR}/include/CDCMessageParser.h
-	${CMAKE_SOURCE_DIR}/include/CDCMessageParserException.h
-	${CMAKE_SOURCE_DIR}/include/CDCReceiveException.h
-	${CMAKE_SOURCE_DIR}/include/CDCSendException.h
-	${CMAKE_SOURCE_DIR}/include/CDCTypes.h
-	${CMAKE_SOURCE_DIR}/src/CDCImplPri.h #declaration of private impl
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCImpl.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCImplException.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CdcInterface.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCMessageParser.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCMessageParserException.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCReceiveException.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCSendException.h
+	${clibcdc_CMAKE_SOURCE_DIR}/include/CDCTypes.h
+	${clibcdc_CMAKE_SOURCE_DIR}/src/CDCImplPri.h #declaration of private impl
 )
 
 # Group the files in IDE.
 source_group("include" FILES ${cdc_INC_FILES})
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/src) #declaration of private impl.
+include_directories(${clibcdc_CMAKE_SOURCE_DIR}/include)
+include_directories(${clibcdc_CMAKE_SOURCE_DIR}/src) #declaration of private impl.
 
 add_library(
 	${PROJECT_NAME}
@@ -50,5 +50,3 @@ add_library(
 	${cdc_SRC_FILES} ${cdc_INC_FILES}
 )
 
-#TODO
-#install(TARGETS ${project} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)

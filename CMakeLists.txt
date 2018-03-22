@@ -29,6 +29,10 @@ message(STATUS "CMAKE_C_FLAGS:           ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS_RELEASE:   ${CMAKE_C_FLAGS_RELEASE}")
 message(STATUS "CMAKE_C_FLAGS_DEBUG:     ${CMAKE_C_FLAGS_DEBUG}")
 
+set(clibcdc_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(clibcdc_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+set(clibcdc_FOUND TRUE PARENT_SCOPE)
+
 #library build
 add_subdirectory(cdc)
 

@@ -4,7 +4,7 @@ set(cdc_example_SRC_FILES
 	WriteRead.cpp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${clibcdc_CMAKE_SOURCE_DIR}/include)
 
 add_executable(${PROJECT_NAME} ${cdc_example_SRC_FILES})
 
