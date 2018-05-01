@@ -1,12 +1,12 @@
-project(cdc_example)
+project(ReadTemperatureExample)
 
-set(cdc_example_SRC_FILES
-	WriteRead.cpp
+set(read_temperature_example_SRC_FILES
+	ReadTemperature.cpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_executable(${PROJECT_NAME} ${cdc_example_SRC_FILES})
+add_executable(${PROJECT_NAME} ${read_temperature_example_SRC_FILES})
 
 if (WIN32) 
 	target_link_libraries(${PROJECT_NAME} cdc)
