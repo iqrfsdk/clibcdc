@@ -19,7 +19,7 @@
  *
  * @author      Dusan Machut
  * @version     1.0.0
- * @date        6.5.2018
+ * @date        8.5.2018
  */
 
 #include <CDCImpl.h>
@@ -94,10 +94,10 @@ int main(int argc, char** argv)
   // check input parameters
   if (argc < 3) {
     std::cerr << "Usage" << std::endl;
-    std::cerr << "  PgmIqrfExample <port-name> <file-name>" << std::endl << std::endl;
+    std::cerr << "  PgmTrcnfgExample <port-name> <file-name>" << std::endl << std::endl;
     std::cerr << "Example" << std::endl;
-    std::cerr << "  PgmIqrfExample COM5 test.trcnfg" << std::endl;
-    std::cerr << "  PgmIqrfExample /dev/ttyACM0 test.trcnfg" << std::endl;
+    std::cerr << "  PgmTrcnfgExample COM5 test.trcnfg" << std::endl;
+    std::cerr << "  PgmTrcnfgExample /dev/ttyACM0 test.trcnfg" << std::endl;
     return (-1);
   }
   else {
