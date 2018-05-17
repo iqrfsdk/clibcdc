@@ -141,10 +141,10 @@ int main(int argc, char** argv)
 
 	if (argc < 2) {
 		std::cerr << "Usage" << std::endl;
-		std::cerr << "  cdc_example <port-name>" << std::endl << std::endl;
+		std::cerr << "  ReadTemperatureExample <port-name>" << std::endl << std::endl;
 		std::cerr << "Example" << std::endl;
-		std::cerr << "  cdc_example COM5" << std::endl;
-		std::cerr << "  cdc_example /dev/ttyACM0" << std::endl;
+		std::cerr << "  ReadTemperatureExample COM5" << std::endl;
+		std::cerr << "  ReadTemperatureExample /dev/ttyACM0" << std::endl;
 		return (-1);
 	}
 	else {
@@ -212,5 +212,3 @@ int main(int argc, char** argv)
     delete testImp;
     return 0;
 }
-
-
