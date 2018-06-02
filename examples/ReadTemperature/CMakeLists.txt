@@ -4,7 +4,7 @@ set(read_temperature_example_SRC_FILES
 	ReadTemperature.cpp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${clibcdc_CMAKE_SOURCE_DIR}/include)
 
 add_executable(${PROJECT_NAME} ${read_temperature_example_SRC_FILES})
 

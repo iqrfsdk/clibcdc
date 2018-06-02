@@ -17,8 +17,8 @@ set(cdc_javastub_INC_FILES
 # Group the files in IDE.
 source_group("include" FILES ${cdc_javastub_INC_FILES})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${clibcdc_CMAKE_SOURCE_DIR})
+include_directories(${clibcdc_CMAKE_SOURCE_DIR}/include)
 
 add_library(
 	${PROJECT_NAME}
