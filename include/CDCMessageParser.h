@@ -108,6 +108,33 @@ public:
 	 * @returns data part of last parsed DR message.
 	 */
     ustring getParsedDRData(ustring& data);
+
+	/**
+	 * Returns enable programming mode response from specified data.
+	 * @return data send response from specified data.
+	 */
+	PTEResponse getParsedPEResponse(ustring& data);
+        
+	/**
+	 * Returns termonate programming mode response from specified data.
+	 * @return data send response from specified data.
+	 */
+	PTEResponse getParsedPTResponse(ustring& data);
+        
+	/**
+	 * Returns upload TR module memory response from specified data.
+	 * @return data send response from specified data.
+	 */
+	PMResponse getParsedPMResponse(ustring& data);
+        
+	/**
+	 * Returns data part of last parsed PM message.
+         * Note: Previous call to parseData() must return MSG_DOWNLOAD_DATA 
+         * before you run this mathod. Do not run this method if the call
+         * returned MSG_UPLOAD_DOWNLOAD.
+	 * @returns data part of last parsed PM message.
+	 */
+	ustring getParsedPMData(ustring& data);
 };
 
 #endif // __CDCMessageParser_h_

@@ -40,7 +40,7 @@ add_subdirectory(cdc)
 add_subdirectory(cdcshared)
 
 #example build
-add_subdirectory(example)
+add_subdirectory(examples)
 
 #javastub build
 if (JNI_FOUND)

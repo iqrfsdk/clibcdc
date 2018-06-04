@@ -141,6 +141,36 @@ public:
 		 * @throw CDCReceiveException if some error occurs during response reception
 		 */
 		void switchToCustom(void);
+                
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		PTEResponse enterProgrammingMode(void);
+                
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		PTEResponse terminateProgrammingMode(void);
+
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		PMResponse upload(unsigned char target, const unsigned char* data, unsigned int dlen);
+		PMResponse upload(unsigned char target, const std::basic_string<unsigned char>& data);
+
+		/**
+		 * @throw CDCSendException if some error occurs during sending command
+		 * @throw CDCReceiveException if some error occurs during response reception
+		 */
+		PMResponse download(unsigned char target, const unsigned char* inputData, 
+                                    unsigned int inputDlen, unsigned char* outputData, 
+                                    unsigned int outputDlen, unsigned int &len);
+		PMResponse download(unsigned char target, 
+                                    const std::basic_string<unsigned char>& inputData,
+                                    std::basic_string<unsigned char>& outputData);                 
 
 		void registerAsyncMsgListener(AsyncMsgListenerF asyncListener);
 
