@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR}/examples)
+include_directories(${clibcdc_CMAKE_SOURCE_DIR}/examples)
 
 add_subdirectory(ReadTemperature)
 add_subdirectory(ReadMemory)
