@@ -19,6 +19,7 @@
 #include <CDCImplPri.h>
 #include <CDCMessageParser.h>
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -109,6 +110,92 @@ void CDCImpl::switchToCustom(void) {
 }
 
 
+PTEResponse CDCImpl::enterProgrammingMode(void) {
+	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_MODE_PROGRAM, uchar_str(""));
+	implObj->processCommand(cmd);
+	return implObj->msgParser->getParsedPEResponse(implObj->lastResponse.message);
+}
+
+PTEResponse CDCImpl::terminateProgrammingMode(void) {
+	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_MODE_NORMAL, uchar_str(""));
+	implObj->processCommand(cmd);
+	return implObj->msgParser->getParsedPTResponse(implObj->lastResponse.message);
+}
+
+static void verifyUpload(unsigned char target, const std::basic_string<unsigned char>& data) {
+	if ((target & 0x80) == 0) {
+		std::ostringstream msg;
+		msg << "Download target " << std::hex << std::showbase << target << " is not valid target for upload operation!";
+		THROW_EXC(CDCSendException, msg.str());
+	}
+	// TODO: Add other checks in the future
+}
+
+static void verifyDownload(unsigned char target) {
+	if ((target & 0x80) != 0) {
+		std::ostringstream msg;
+		msg << "Upload target " << std::hex << std::showbase << target << " is not valid target for download operation!";
+		THROW_EXC(CDCSendException, msg.str());
+	}
+	// TODO: Add other checks in the future
+}
+
+PMResponse CDCImpl::upload(unsigned char target, const unsigned char* data, unsigned int dlen) {
+	ustring dataStr(data, dlen);
+	verifyUpload(target, data);
+	dataStr.insert(dataStr.begin(), target);
+	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_UPLOAD_DOWNLOAD, dataStr);
+	implObj->processCommand(cmd);
+	return implObj->msgParser->getParsedPMResponse(implObj->lastResponse.message);
+}
+
+PMResponse CDCImpl::upload(unsigned char target, const std::basic_string<unsigned char>& data)  {
+	ustring dataStr = data;
+	verifyUpload(target, data);
+	dataStr.insert(dataStr.begin(), target);
+	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_UPLOAD_DOWNLOAD, dataStr);
+	implObj->processCommand(cmd);
+	return implObj->msgParser->getParsedPMResponse(implObj->lastResponse.message);
+}
+
+PMResponse CDCImpl::download(unsigned char target, const unsigned char* inputData, unsigned int inputDlen,
+                    unsigned char* outputData, unsigned int outputDlen, unsigned int &len) {
+	ustring dataStr(inputData, inputDlen);
+	len = 0;        
+	verifyDownload(target);
+	dataStr.insert(dataStr.begin(), target);
+	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_UPLOAD_DOWNLOAD, dataStr);
+	implObj->processCommand(cmd);
+	if (implObj->lastResponse.parseResult.msgType == MSG_DOWNLOAD_DATA) {
+		dataStr = implObj->msgParser->getParsedPMData(implObj->lastResponse.message);
+		if (dataStr.length() >= outputDlen) {
+			std::ostringstream msg;
+			msg << "Receive of download message failed. Data are longer than available data buffer - " << dataStr.length() << " >= " << outputDlen << "!";
+			THROW_EXC(CDCReceiveException, msg.str());
+		}
+		std::copy_n(dataStr.data(), dataStr.length(), outputData);
+		len = dataStr.length();
+		return PMResponse::OK;
+	} else {
+		return implObj->msgParser->getParsedPMResponse(implObj->lastResponse.message);
+	}
+}
+
+PMResponse CDCImpl::download(unsigned char target, const std::basic_string<unsigned char>& inputData, std::basic_string<unsigned char>& outputData) {
+	ustring dataStr = inputData;
+	verifyDownload(target);
+	dataStr.insert(dataStr.begin(), target);
+	CDCImplPrivate::Command cmd = implObj->constructCommand(MSG_UPLOAD_DOWNLOAD, dataStr);
+	implObj->processCommand(cmd);
+	if (implObj->lastResponse.parseResult.msgType == MSG_DOWNLOAD_DATA) {
+		dataStr = implObj->msgParser->getParsedPMData(implObj->lastResponse.message);
+		outputData = dataStr;
+		return PMResponse::OK;
+	} else {
+		return implObj->msgParser->getParsedPMResponse(implObj->lastResponse.message);
+	}
+}
+
 bool CDCImpl::isReceptionStopped(void) {
 	return implObj->getReceptionStopped();
 }
@@ -133,7 +220,6 @@ void CDCImpl::unregisterAsyncMsgListener(void) {
 //////////////////////////////////////
 // class CDCImplPrivate
 //////////////////////////////////////
-
 /*
 * Creates instance with COM-port set to COM1.
 */
@@ -229,6 +315,10 @@ void CDCImplPrivate::initMessageHeaders(void) {
   messageHeaders.insert(pair<MessageType, string>(MSG_DATA_SEND, "DS"));
   messageHeaders.insert(pair<MessageType, string>(MSG_SWITCH, "U"));
   messageHeaders.insert(pair<MessageType, string>(MSG_ASYNC, "DR"));
+  messageHeaders.insert(pair<MessageType, string>(MSG_MODE_NORMAL, "PT"));
+  messageHeaders.insert(pair<MessageType, string>(MSG_MODE_PROGRAM, "PE"));
+  messageHeaders.insert(pair<MessageType, string>(MSG_UPLOAD_DOWNLOAD, "PM"));
+  messageHeaders.insert(pair<MessageType, string>(MSG_DOWNLOAD_DATA, "PM")); // Used only by receive operation
 }
 
 void CDCImplPrivate::initLastResponse(void)  {
@@ -344,6 +434,9 @@ CDCImplPrivate::ParsedMessage CDCImplPrivate::parseNextMessage(ustring& msgBuffe
   ParsedMessage parsedMessage;
   ustring parsedMsg;
 
+  // Bugfix of error in fw implementation
+  if (msgBuffer.length() > 0 && msgBuffer[0] == '>')
+      msgBuffer[0] = '<';
   ParseResult parseResult = msgParser->parseData(msgBuffer);
   switch (parseResult.resultType) {
   case PARSE_OK:
@@ -410,6 +503,14 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd) {
     tmpStr.append(uchar_str(":"));
     tmpStr.append(cmd.data);
   }
+  
+  if (cmd.msgType == MSG_UPLOAD_DOWNLOAD || cmd.msgType == MSG_DOWNLOAD_DATA) {
+    if (cmd.data.size() > UCHAR_MAX) {
+      THROW_EXC(CDCSendException, "Data size too large");
+    }
+    tmpStr.append(cmd.data);
+  }
+  
   tmpStr.append(1, 0x0D);
 
   size_t sz = tmpStr.size();
@@ -457,7 +558,10 @@ void CDCImplPrivate::processCommand(Command& cmd) {
   waitForMyEvent(newMsgEvent, TM_WAIT_RESP);
 
   if (lastResponse.parseResult.msgType != cmd.msgType) {
-    THROW_EXC(CDCReceiveException, "Response has bad type.");
+    // TODO: Find some better way to solve upload/download duality
+    if (!((cmd.msgType == MSG_UPLOAD_DOWNLOAD) && (lastResponse.parseResult.msgType == MSG_DOWNLOAD_DATA) && ((cmd.data[0] & 0x80) == 0))) {
+      THROW_EXC(CDCReceiveException, "Response has bad type.");
+    }
   }
 }
 
