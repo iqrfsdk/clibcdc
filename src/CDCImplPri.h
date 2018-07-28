@@ -168,7 +168,7 @@ public:
   /* Checks, if specified value is the correct value of SPIStatus. */
   bool isSPIStatusValue(ustring& statValue);
 
-  int appendDataFromPort(ustring& destBuffer);
+  int appendDataFromPort(unsigned char* buf, unsigned buflen, ustring& destBuffer);
 
   // critical section objects for thread safe access to some fields
   std::mutex csLastRecpError;
