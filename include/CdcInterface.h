@@ -19,10 +19,10 @@
  * device. This communication is based on USB CDC class implementation of
  * IQRF platform.
  *
- * @author		Michal Konopa, Dusan Machut
- * @version		2.0.0
- * @date		06.10.2018
- * @file		CdcInterface.h
+ * @author      Michal Konopa, Dusan Machut
+ * @version     2.0.0
+ * @date        06.10.2018
+ * @file        CdcInterface.h
  *
  */
 
@@ -36,12 +36,12 @@
  * (get usb device info).
  */
 struct DeviceInfo {
-	char* type;					/**< device type */
-	unsigned int typeLen;		/**< length of device type information */
-	char* firmwareVersion;		/**< firmware version */
-	unsigned int fwLen;			/**< length of firmware version information */
-	char* serialNumber;			/**< serial number */
-	unsigned int snLen;			/**< length of serial number information */
+    char* type;                /**< device type */
+    unsigned int typeLen;      /**< length of device type information */
+    char* firmwareVersion;     /**< firmware version */
+    unsigned int fwLen;        /**< length of firmware version information */
+    char* serialNumber;        /**< serial number */
+    unsigned int snLen;        /**< length of serial number information */
 };
 
 /**
@@ -49,35 +49,35 @@ struct DeviceInfo {
  * IQRF OS User's guide (chapter Identification -> Module Data).
  */
 struct ModuleInfo {
-	static const unsigned int SN_SIZE = 4;
-	static const unsigned int BUILD_SIZE = 2;
+    static const unsigned int SN_SIZE = 4;
+    static const unsigned int BUILD_SIZE = 2;
     static const unsigned int RESERVED_SIZE = 8;
     static const unsigned int IBK_SIZE = 16;
-	unsigned char serialNumber[SN_SIZE];		/**< serial number */
-	unsigned char osVersion;					/**< OS version */
-	unsigned char trType;						/**< TR module type */
-	unsigned char osBuild[BUILD_SIZE];			/**< OS build */
-    unsigned char reserved[RESERVED_SIZE];		/**< reserved */
-    unsigned char ibk[IBK_SIZE];		        /**< individual bonding key */
+    unsigned char serialNumber[SN_SIZE];        /**< serial number */
+    unsigned char osVersion;                    /**< OS version */
+    unsigned char trType;                       /**< TR module type */
+    unsigned char osBuild[BUILD_SIZE];          /**< OS build */
+    unsigned char reserved[RESERVED_SIZE];      /**< reserved */
+    unsigned char ibk[IBK_SIZE];                /**< individual bonding key */
 };
 
 /**
  * Values according to the table in IQRF SPI User's guide (chapter SPI status).
  */
 enum SPIModes {DISABLED = 0x0, SUSPENDED = 0x07, BUFF_PROTECT = 0x3F,
-	CRCM_ERR = 0x3E, READY_COMM = 0x80, READY_PROG = 0x81, READY_DEBUG = 0x82,
-	SLOW_MODE = 0x83, HW_ERROR = 0xFF
+    CRCM_ERR = 0x3E, READY_COMM = 0x80, READY_PROG = 0x81, READY_DEBUG = 0x82,
+    SLOW_MODE = 0x83, HW_ERROR = 0xFF
 };
 
 /**
  * Current status. Response information of "S-command" (get status).
  */
 struct SPIStatus {
-	bool isDataReady;	/**< determines, that DATA_READY is used */
-	union {
-		SPIModes SPI_MODE;
-		int DATA_READY;		/**< SPI data ready */
-	};
+    bool isDataReady;       /**< determines, that DATA_READY is used */
+    union {
+        SPIModes SPI_MODE;
+        int DATA_READY;     /**< SPI data ready */
+    };
 };
 
 /**
@@ -115,109 +115,109 @@ typedef std::function<void(unsigned char*, unsigned int)> AsyncMsgListenerF;
  * passed to that function parameters.
  */
 class CDCInterface {
-	public:
-		/**
-		 * Performs communication test("> command").
-		 * @return @c true if the test succeeds
-		 * @return @c false otherwise
-		 */
-		virtual bool test(void) = 0;
+    public:
+        /**
+         * Performs communication test("> command").
+         * @return @c true if the test succeeds
+         * @return @c false otherwise
+         */
+         virtual bool test(void) = 0;
 
-		/**
-		 * Resets USB device("R-command").
-		 */
-		virtual void resetUSBDevice(void) = 0;
+        /**
+         * Resets USB device("R-command").
+         */
+        virtual void resetUSBDevice(void) = 0;
 
-		/**
-		 * Resets TR module("RT-command").
-		 */
-		virtual void resetTRModule(void) = 0;
+        /**
+         * Resets TR module("RT-command").
+         */
+        virtual void resetTRModule(void) = 0;
 
-		/**
-		 * Returns USB device identification("I-command").
-		 * @return USB device identification.
-		 */
-		virtual DeviceInfo* getUSBDeviceInfo(void) = 0;
+        /**
+         * Returns USB device identification("I-command").
+         * @return USB device identification.
+         */
+        virtual DeviceInfo* getUSBDeviceInfo(void) = 0;
 
-		/**
-		 * Returns identification of TR module inside the USB device
-		 * ("IT-command").
-		 * @return TR module identification.
+        /**
+         * Returns identification of TR module inside the USB device
+         * ("IT-command").
+         * @return TR module identification.
          * @return NULL if received identification data are corupted
-		 */
-		virtual ModuleInfo* getTRModuleInfo(void) = 0;
+         */
+        virtual ModuleInfo* getTRModuleInfo(void) = 0;
 
-		/**
-		 * Performs an acoustical or optical indication of USB device
-		 * ("B-command").
-		 */
-		virtual void indicateConnectivity(void) = 0;
+        /**
+         * Performs an acoustical or optical indication of USB device
+         * ("B-command").
+         */
+        virtual void indicateConnectivity(void) = 0;
 
-		/**
-		 * Returns information about current status of TR module("S-command").
-		 * @return current status of TR module.
-		 */
-		virtual SPIStatus getStatus(void) = 0;
+        /**
+         * Returns information about current status of TR module("S-command").
+         * @return current status of TR module.
+         */
+        virtual SPIStatus getStatus(void) = 0;
 
-		/**
-		 * Sends data to TR module inside the USB device("DS-command").
-		 * @param data the data to send
-		 * @param dlen the length of data to send
-		 * @return result of data send
-		 */
-		virtual DSResponse sendData(const unsigned char* data, unsigned int dlen) = 0;
-    virtual DSResponse sendData(const std::basic_string<unsigned char>& data) = 0;
+        /**
+         * Sends data to TR module inside the USB device("DS-command").
+         * @param data the data to send
+         * @param dlen the length of data to send
+         * @return result of data send
+         */
+        virtual DSResponse sendData(const unsigned char* data, unsigned int dlen) = 0;
+        virtual DSResponse sendData(const std::basic_string<unsigned char>& data) = 0;
 
-		/**
-		 * Switches USB class to Custom and the device is reset 5 s after this
-		 * command is issued("U-command").
-		 */
-		virtual void switchToCustom(void) = 0;
+        /**
+         * Switches USB class to Custom and the device is reset 5 s after this
+         * command is issued("U-command").
+         */
+        virtual void switchToCustom(void) = 0;
 
-		/**
-		 * @throw CDCSendException if some error occurs during sending command
-		 * @throw CDCReceiveException if some error occurs during response reception
-		 */
-		virtual PTEResponse enterProgrammingMode(void) = 0;
+        /**
+         * @throw CDCSendException if some error occurs during sending command
+         * @throw CDCReceiveException if some error occurs during response reception
+         */
+        virtual PTEResponse enterProgrammingMode(void) = 0;
 
-		/**
-		 * @throw CDCSendException if some error occurs during sending command
-		 * @throw CDCReceiveException if some error occurs during response reception
-		 */
-		virtual PTEResponse terminateProgrammingMode(void) = 0;
+        /**
+         * @throw CDCSendException if some error occurs during sending command
+         * @throw CDCReceiveException if some error occurs during response reception
+         */
+        virtual PTEResponse terminateProgrammingMode(void) = 0;
 
-		/**
-		 * @throw CDCSendException if some error occurs during sending command
-		 * @throw CDCReceiveException if some error occurs during response reception
-		 */
-		virtual PMResponse upload(unsigned char target, const unsigned char* data, unsigned int dlen) = 0;
-		virtual PMResponse upload(unsigned char target, const std::basic_string<unsigned char>& data) = 0;
+        /**
+         * @throw CDCSendException if some error occurs during sending command
+         * @throw CDCReceiveException if some error occurs during response reception
+         */
+        virtual PMResponse upload(unsigned char target, const unsigned char* data, unsigned int dlen) = 0;
+        virtual PMResponse upload(unsigned char target, const std::basic_string<unsigned char>& data) = 0;
 
-		/**
-		 * @throw CDCSendException if some error occurs during sending command
-		 * @throw CDCReceiveException if some error occurs during response reception
-		 */
-		virtual PMResponse download(unsigned char target, const unsigned char* inputData,
+        /**
+         * @throw CDCSendException if some error occurs during sending command
+         * @throw CDCReceiveException if some error occurs during response reception
+         */
+        virtual PMResponse download(unsigned char target, const unsigned char* inputData,
                                     unsigned int inputDlen, unsigned char* outputData,
                                     unsigned int outputDlen, unsigned int &len) = 0;
-		virtual PMResponse download(unsigned char target,
+        virtual PMResponse download(unsigned char target,
                                     const std::basic_string<unsigned char>& inputData,
                                     std::basic_string<unsigned char>& outputData) = 0;
 
-		/**
-		 * Registers user-defined listener of asynchronous messages("DR-messages")
-		 * reception during run of this library. Data of each message are passed
-		 * in the first parameter, length of the data is passed as the second parameter.
-		 * @param asyncListener user's listener
-		 */
-		virtual void registerAsyncMsgListener(AsyncMsgListenerF asyncListener) = 0;
+        /**
+         * Registers user-defined listener of asynchronous messages("DR-messages")
+         * reception during run of this library. Data of each message are passed
+         * in the first parameter, length of the data is passed as the second parameter.
+         * @param asyncListener user's listener
+         */
+        virtual void registerAsyncMsgListener(AsyncMsgListenerF asyncListener) = 0;
 
-		/**
-		 * Unregisters asynchronous messages reception listener.
-		 */
-		virtual void unregisterAsyncMsgListener(void) = 0;
+        /**
+         * Unregisters asynchronous messages reception listener.
+         */
+        virtual void unregisterAsyncMsgListener(void) = 0;
 
-		virtual ~CDCInterface() {}
+        virtual ~CDCInterface() {}
 };
 
 #endif
