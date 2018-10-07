@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+ * Copyright 2018 MICRORISC s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -274,17 +274,17 @@ void CDCMessageParserPrivate::initStatesInfoMap(void) {
 
 	unsigned int switchStates[] = { 53, 54, 55, 56, 57 };
 	insertStatesInfo(switchStates, 5,  MSG_SWITCH);
-        
+
 	unsigned int modeNormal[] = { 69, 70, 71, 72, 73, 74, 75, 76, 77, 78 };
 	insertStatesInfo(modeNormal, 10,  MSG_MODE_NORMAL);
-        
+
 	unsigned int modeProgram[] = { 59, 60, 61, 62, 63, 64, 65, 66, 67, 68 };
 	insertStatesInfo(modeProgram, 10,  MSG_MODE_PROGRAM);
-        
-	unsigned int resUploadDownload[] = { 80, 81, 82, 83, 84, 85, 86, 
+
+	unsigned int resUploadDownload[] = { 80, 81, 82, 83, 84, 85, 86,
                                              87, 88, 89, 90, 91, 92, 93};
 	insertStatesInfo(resUploadDownload, 17,  MSG_UPLOAD_DOWNLOAD);
-        
+
         unsigned int dataDownload[] = { 96, 97 };
 	insertStatesInfo(dataDownload, 2,  MSG_DOWNLOAD_DATA);
 }
@@ -390,12 +390,12 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
     insertTransition(54, 'O', 55);
     insertTransition(55, 'K', 56);
 	insertTransition(56, 0x0D, 57);
-        
+
 	// Programming
 	insertTransition(58, 'E', 59);
 	insertTransition(58, 'T', 69);
 	insertTransition(58, 'M', 79);
-        
+
 	// Enter programming mode
 	insertTransition(59, ':', 60);
 	insertTransition(60, 'O', 61);
@@ -406,7 +406,7 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
 	insertTransition(65, 'R', 66);
 	insertTransition(66, '1', 67);
 	insertTransition(67, 0x0D, 68);
-        
+
 	// Terminate programming mode
 	insertTransition(69, ':', 70);
 	insertTransition(70, 'O', 71);
@@ -417,16 +417,16 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
 	insertTransition(75, 'R', 76);
 	insertTransition(76, '1', 77);
 	insertTransition(77, 0x0D, 78);
-        
+
 	// Upload/Download
 	// handled via special function
 	insertTransition(79, ':', 95);
 	//insertTransition(79, data, 96);
-        
+
 	// Upload/Error
 	insertTransition(80, 'O', 81);
 	insertTransition(80, 'E', 84);
-        insertTransition(80, 'B', 89);
+    insertTransition(80, 'B', 89);
 	insertTransition(81, 'K', 82);
 	insertTransition(82, 0x0D, 83);
 	insertTransition(84, 'R', 85);
@@ -442,7 +442,7 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
 	insertTransition(90, 'S', 91);
 	insertTransition(91, 'Y', 92);
 	insertTransition(92, 0x0D, 93);
-        
+
 	// Download Data
 	insertTransition(96, 0x0D, 97);
 }
@@ -613,19 +613,34 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processUSBInfo
 /* Processes state 21. */
 CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processTRInfo(ustring& data,
 		unsigned int pos) {
+
+    const unsigned int MODULE_DATA_SIZE = 32;
+    const unsigned int STANDARD_IDF_SIZE = 21;
+    const unsigned int EXTENDED_IDF_SIZE = 37;
+
 	StateProcResult procResult = { 21, pos, false };
 
 	if (pos == (data.size() - 1)) {
 		return procResult;
 	}
 
-	const unsigned int MODULE_DATA_SIZE = 8;
+    if (data.size() <= EXTENDED_IDF_SIZE) {
+        if (data.size() != STANDARD_IDF_SIZE && data.size() != EXTENDED_IDF_SIZE) {
+            return procResult;
+        }
+        else {
+            if (data.size() == STANDARD_IDF_SIZE && data.at(STANDARD_IDF_SIZE - 1) != 0x0D) {
+                return procResult;
+            }
+        }
+    }
 
 	procResult.newState = 22;
-	if ((pos-1 + MODULE_DATA_SIZE) >= data.size()) {
-		procResult.lastPosition = data.size()-1;
+
+	if ((data.size()-1) > (pos + MODULE_DATA_SIZE)) {
+		procResult.lastPosition = pos-1 + MODULE_DATA_SIZE;
 	} else {
-      	procResult.lastPosition = pos-1 + MODULE_DATA_SIZE;
+      	procResult.lastPosition = data.size()-2;
 	}
 
 	return procResult;
@@ -667,7 +682,7 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processPMRespD
                 procResult.newState = 80;
                 procResult.lastPosition = pos - 1;
         } else {
-                // Message length should be 5 or 36. However, we threat 
+                // Message length should be 5 or 36. However, we threat
                 // all message lengths other than 7 and 9 as download data.
                 procResult.newState = 96;
                 procResult.lastPosition = data.size()-2;
@@ -791,7 +806,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
 
 	devInfo->firmwareVersion = ant_new char[fmSize + 1];
 	fmStr.copy ((unsigned char*)devInfo->firmwareVersion, fmStr.size()); //strcpy(devInfo->firmwareVersion, (const char*)fmStr.c_str());
-	devInfo->fvLen = fmSize;
+	devInfo->fwLen = fmSize;
 
     // serial number parsing
 	size_t crPos = data.find(13, secondHashPos+1);
@@ -807,24 +822,53 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
 }
 
 ModuleInfo* CDCMessageParser::getParsedModuleInfo(ustring& data) {
+    #define STANDARD_IDF_SIZE   21
+    #define EXTENDED_IDF_SIZE   37
+
 	std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
+
+    // if TR identification data size is wrong, return NULL
+    if (data.size() != STANDARD_IDF_SIZE && data.size() != EXTENDED_IDF_SIZE) return NULL;
 
 	ModuleInfo* modInfo = ant_new ModuleInfo();
     size_t msgBodyPos = 4;
 
+    // read serial number
     modInfo->serialNumber[0] = data.at(msgBodyPos);
 	modInfo->serialNumber[1] = data.at(msgBodyPos+1);
 	modInfo->serialNumber[2] = data.at(msgBodyPos+2);
     modInfo->serialNumber[3] = data.at(msgBodyPos+3);
 
-	unsigned int infoId = ModuleInfo::SN_SIZE;
+    // read OS version
+    unsigned int infoId = ModuleInfo::SN_SIZE;
 	modInfo->osVersion = data.at(msgBodyPos+infoId);
 	infoId++;
-	modInfo->PICType = data.at(msgBodyPos+infoId);
+    // read TR module type
+	modInfo->trType = data.at(msgBodyPos+infoId);
     infoId++;
 
+    // read OS build
 	for (unsigned int i = 0; i < ModuleInfo::BUILD_SIZE; i++, infoId++) {
 		modInfo->osBuild[i] = data.at(msgBodyPos+infoId);
+	}
+
+    // read reserved area
+    for (unsigned int i = 0; i < ModuleInfo::RESERVED_SIZE; i++, infoId++) {
+		modInfo->reserved[i] = data.at(msgBodyPos+infoId);
+	}
+
+    // check if TR module supports extended idf format
+    unsigned int extendedIdfFormat = 0;
+    if (data.size() == EXTENDED_IDF_SIZE) extendedIdfFormat = 1;
+
+    // read individual bonding key
+    for (unsigned int i = 0; i < ModuleInfo::IBK_SIZE; i++, infoId++) {
+        if (extendedIdfFormat){
+            modInfo->ibk[i] = data.at(msgBodyPos+infoId);
+        }
+        else {
+            modInfo->ibk[i] = 0;
+        }
 	}
 
 	//LeaveCriticalSection(&csUI);
@@ -966,27 +1010,27 @@ PMResponse CDCMessageParser::getParsedPMResponse(ustring& data) {
 		//LeaveCriticalSection(&csUI);
 		return PMResponse::ERR3;
 	}
-	
+
 	if (msgBody == uchar_str("ERR4")) {
 		//LeaveCriticalSection(&csUI);
 		return PMResponse::ERR4;
 	}
-	
+
 	if (msgBody == uchar_str("ERR5")) {
 		//LeaveCriticalSection(&csUI);
 		return PMResponse::ERR5;
 	}
-	
+
 	if (msgBody == uchar_str("ERR6")) {
 		//LeaveCriticalSection(&csUI);
 		return PMResponse::ERR6;
 	}
-	
+
 	if (msgBody == uchar_str("ERR7")) {
 		//LeaveCriticalSection(&csUI);
 		return PMResponse::ERR7;
 	}
-	
+
 	if (msgBody == uchar_str("BUSY")) {
 		//LeaveCriticalSection(&csUI);
 		return PMResponse::BUSY;
