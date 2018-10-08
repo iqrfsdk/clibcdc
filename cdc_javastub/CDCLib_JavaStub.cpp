@@ -258,7 +258,7 @@ JNIEXPORT jobject JNICALL Java_com_microrisc_cdc_J_1CDCImpl_stub_1getTRModuleInf
 	}
 
 	jshort jOsVersion = modInfo->osVersion;
-	jshort jPICType = modInfo->PICType;
+	jshort jTrType = modInfo->trType;
 
 	delete jBuffer;
 
@@ -277,7 +277,7 @@ JNIEXPORT jobject JNICALL Java_com_microrisc_cdc_J_1CDCImpl_stub_1getTRModuleInf
 	}
 
   jobject jModInfo = env->NewObject(classModuleInfo, modConstructor, jSerNumberArr,
-		jOsVersion, jPICType, jOsBuildArr);
+		jOsVersion, jTrType, jOsBuildArr);
 	
 	delete jBuffer;
 	return jModInfo;
