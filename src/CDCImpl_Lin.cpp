@@ -45,6 +45,9 @@ int CDCImplPrivate::readMsgThread() {
     ustring receivedBytes;
     fd_set waitEvents;
     std::string errorDescr;
+    const size_t BUFF_SIZE = 1024;
+    unsigned char buffer[BUFF_SIZE];
+
 
     try  {
 		int maxEventNum = ((portHandle > readEndEvent)? portHandle:readEndEvent) + 1;
@@ -71,7 +74,7 @@ int CDCImplPrivate::readMsgThread() {
 				{
 					// read in characters into input buffer
 					if (FD_ISSET(portHandle, &waitEvents)) {
-						int messageEnd = appendDataFromPort(receivedBytes);
+						int messageEnd = appendDataFromPort(buffer, BUFF_SIZE, receivedBytes);
 						if (messageEnd != -1) {
 							processAllMessages(receivedBytes);
 						}
@@ -102,23 +105,16 @@ int CDCImplPrivate::readMsgThread() {
  *		   -1, if no message end character was appended into specified buffer
  * @throw CDCReceiveException
  */
-int CDCImplPrivate::appendDataFromPort(ustring& destBuffer) {
+int CDCImplPrivate::appendDataFromPort(unsigned char* buf, unsigned buflen, ustring& destBuffer) {
 	int messageEnd = -1;
 
-    /*
-     * buffer size will be determined according to max. number of chars inside
-     * received message
-     */
-    size_t BUFF_SIZE = 100;
-    unsigned char* buffer = new unsigned char[BUFF_SIZE];
-
-    ssize_t readResult = read(portHandle, (void*)buffer, BUFF_SIZE);
+    ssize_t readResult = read(portHandle, (void*)buf, buflen);
     if (readResult == -1) {
         // error in communication
 		THROW_EXC(CDCReceiveException, "Appending data from COM-port failed with error " << errno);
     }
 
-    destBuffer.append(buffer, readResult);
+    destBuffer.append(buf, readResult);
     size_t endPos = destBuffer.find(0x0D);
     if (endPos != std::string::npos) {
         messageEnd = endPos;
