@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
  *
  * @author		Michal Konopa
  * @file		CDCTypes.h
- * @version		1.0.0
+ * @version		1.0.1
  * @date		12.9.2012
  */
 

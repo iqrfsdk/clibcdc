@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 #include <CDCSendException.h>
 
 
-CDCSendException::CDCSendException(const char* cause):CDCImplException(cause) {
+CDCSendException::CDCSendException(const char* cause):CDCImplException(cause)
+{
 	this->identity = "CDCSendException";
 }
 
-CDCSendException::~CDCSendException() throw() {
+CDCSendException::~CDCSendException() throw()
+{
     identity.clear();
 }
-

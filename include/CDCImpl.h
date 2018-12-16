@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+* Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
  *
  * @author		Michal Konopa
  * @file		CDCImpl.h
- * @version		1.0
+ * @version		1.0.1
  * @date		16.12.2011
  */
 
@@ -47,11 +47,11 @@ class CDCImplPrivate;
  * Properties:
  * - Dedicated thread for reading from COM-port( COM1 is default ).
  * - Exception mechanism for dealing with some type of errors.
- * - Simple validation mechanism for incomming message data.
- * - Inner timeout settings(usualy 5000 ms) for waiting for operations,
+ * - Simple validation mechanism for incoming message data.
+ * - Inner timeout settings(usually 5000 ms) for waiting for operations,
  *     user-defined timeout settings are not currently supported.
  * - If some serious error occurs during reading from COM-port, the reading thread is
- *   automaticly stopped. Stopped thread is currently not possible to start
+ *   automatically stopped. Stopped thread is currently not possible to start
  *   again - for continuous working you must destruct the object and
  *   construct the another one. Activity of reading thread can be tested via
  *   @c isReceptionStopped function. If some method from public interface is
@@ -141,13 +141,13 @@ public:
 		 * @throw CDCReceiveException if some error occurs during response reception
 		 */
 		void switchToCustom(void);
-                
+
 		/**
 		 * @throw CDCSendException if some error occurs during sending command
 		 * @throw CDCReceiveException if some error occurs during response reception
 		 */
 		PTEResponse enterProgrammingMode(void);
-                
+
 		/**
 		 * @throw CDCSendException if some error occurs during sending command
 		 * @throw CDCReceiveException if some error occurs during response reception
@@ -165,19 +165,19 @@ public:
 		 * @throw CDCSendException if some error occurs during sending command
 		 * @throw CDCReceiveException if some error occurs during response reception
 		 */
-		PMResponse download(unsigned char target, const unsigned char* inputData, 
-                                    unsigned int inputDlen, unsigned char* outputData, 
+		PMResponse download(unsigned char target, const unsigned char* inputData,
+                                    unsigned int inputDlen, unsigned char* outputData,
                                     unsigned int outputDlen, unsigned int &len);
-		PMResponse download(unsigned char target, 
+		PMResponse download(unsigned char target,
                                     const std::basic_string<unsigned char>& inputData,
-                                    std::basic_string<unsigned char>& outputData);                 
+                                    std::basic_string<unsigned char>& outputData);
 
 		void registerAsyncMsgListener(AsyncMsgListenerF asyncListener);
 
 		void unregisterAsyncMsgListener(void);
 
 		/**
-		 * Indicates, wheather reception of messages from associated COM-port
+		 * Indicates, whether reception of messages from associated COM-port
 		 * is stopped.
 		 * @return reception stop indication
 		 */

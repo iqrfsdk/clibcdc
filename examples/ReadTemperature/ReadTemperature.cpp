@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MICRORISC s.r.o.
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
  * DPA Write-Read example
  *
  * @author      Michal Konopa, Rostislav Spinar
- * @version     1.0.0
- * @date        1.4.2015
+ * @version     1.0.1
+ * @date        16.12.2018
  */
 
 #include <CDCImpl.h>
@@ -38,41 +38,42 @@ const unsigned char CONFIRMATION_HEADER[] = { 0x01, 0x00, 0x0A, 0x00 };
 const unsigned char RESPONSE_HEADER[] = { 0x01, 0x00, 0x0A, 0x80 };
 
 // prints specified data onto standard output in hex format
-void printDataInHex(unsigned char* data, unsigned int length) {
+void printDataInHex(unsigned char* data, unsigned int length)
+{
     for ( int i = 0; i < length; i++ ) {
         std::cout << "0x" << std::hex << (int)*data;
         data++;
-        if ( i != (length - 1) ) {
+        if ( i != (length - 1) )
             std::cout << " ";
-        }
     }
     std::cout << std::dec << "\n";
 }
 
 // determines, if the specified message header is the CONFIRMATION
-bool isConfirmation(unsigned char* msgHeader) {
+bool isConfirmation(unsigned char* msgHeader)
+{
     for ( int i = 0; i < HEADER_LENGTH; i++ ) {
-        if ( *msgHeader != CONFIRMATION_HEADER[i] ) {
+        if ( *msgHeader != CONFIRMATION_HEADER[i] )
             return false;
-        }
         msgHeader++;
     }
     return true;
 }
 
 // determines, if the specified message header is the RESPONSE
-bool isResponse(unsigned char* msgHeader) {
+bool isResponse(unsigned char* msgHeader)
+{
     for ( int i = 0; i < HEADER_LENGTH; i++ ) {
-        if ( *msgHeader != RESPONSE_HEADER[i] ) {
+        if ( *msgHeader != RESPONSE_HEADER[i] )
             return false;
-        }
         msgHeader++;
     }
     return true;
 }
 
 // prints specified response onto standard output
-void printResponse(unsigned char* response, unsigned int length) {
+void printResponse(unsigned char* response, unsigned int length)
+{
     // positions of fields in the response
     const int ERROR_CODE_POS = 6;
     const int ERROR_CODE_OK = 0;
@@ -97,7 +98,8 @@ void printResponse(unsigned char* response, unsigned int length) {
     delete[] fullTemperatureValue;
 }
 
-void receiveData(unsigned char* data, unsigned int length) {
+void receiveData(unsigned char* data, unsigned int length)
+{
     if ( data == NULL || length == 0 ) {
         std::cout << "No data received\n";
         return;
@@ -126,9 +128,9 @@ void receiveData(unsigned char* data, unsigned int length) {
         return;
     }
 
-	std::cout << "Unknown type of message. Data: ";
-	printDataInHex(data, length);
-	delete[] msgHeader;
+    std::cout << "Unknown type of message. Data: ";
+    printDataInHex(data, length);
+    delete[] msgHeader;
 }
 
 
@@ -139,65 +141,63 @@ int main(int argc, char** argv)
 #endif
   std::string port_name;
 
-	if (argc < 2) {
-		std::cerr << "Usage" << std::endl;
-		std::cerr << "  ReadTemperatureExample <port-name>" << std::endl << std::endl;
-		std::cerr << "Example" << std::endl;
-		std::cerr << "  ReadTemperatureExample COM5" << std::endl;
-		std::cerr << "  ReadTemperatureExample /dev/ttyACM0" << std::endl;
-		return (-1);
-	}
-	else {
-		port_name = argv[1];
-	}
+    if (argc < 2) {
+        std::cerr << "Usage" << std::endl;
+        std::cerr << "  ReadTemperatureExample <port-name>" << std::endl << std::endl;
+        std::cerr << "Example" << std::endl;
+        std::cerr << "  ReadTemperatureExample COM5" << std::endl;
+        std::cerr << "  ReadTemperatureExample /dev/ttyACM0" << std::endl;
+        return (-1);
+    } else {
+        port_name = argv[1];
+    }
 
-	CDCImpl* testImp = NULL;
-	try {
-		testImp = ant_new CDCImpl(port_name.c_str());
+    CDCImpl* testImp = NULL;
+    try {
+        testImp = ant_new CDCImpl(port_name.c_str());
 
-		bool test = testImp->test();
+        bool test = testImp->test();
 
-		if ( test ) {
-			std::cout << "Test OK\n";
-		} else {
-			std::cout << "Test FAILED\n";
-			delete testImp;
-			return 2;
-		}
-	} catch ( CDCImplException& e ) {
-		std::cout << e.getDescr() << "\n";
-		if ( testImp != NULL ) {
-			delete testImp;
-		}
-		return 1;
-	}
+        if ( test ) {
+            std::cout << "Test OK\n";
+        } else {
+            std::cout << "Test FAILED\n";
+            delete testImp;
+            return 2;
+        }
+    } catch ( CDCImplException& e ) {
+        std::cout << e.getDescr() << "\n";
+        if ( testImp != NULL )
+            delete testImp;
+        return 1;
+    }
 
-	// register to receiving asynchronous messages
-  AsyncMsgListenerF aml = &receiveData;
-	testImp->registerAsyncMsgListener(&receiveData);
+    // register to receiving asynchronous messages
+    AsyncMsgListenerF aml = &receiveData;
+    testImp->registerAsyncMsgListener(&receiveData);
 
-	// data to send to USB device
-	const int REQUEST_LENGTH = 6;
-	unsigned char temperatureRequest[REQUEST_LENGTH] = { 0x01, 0x00, 0x0A, 0x00, 0xFF, 0xFF };
+    // data to send to USB device
+    const int REQUEST_LENGTH = 6;
+    unsigned char temperatureRequest[REQUEST_LENGTH] = { 0x01, 0x00, 0x0A, 0x00, 0xFF, 0xFF };
 
-	for ( int sendCounter = 0; sendCounter < 10; sendCounter++ ) {
-		try {
-			// sending read temperature request and checking response of the device
-			DSResponse dsResponse = testImp->sendData(temperatureRequest, REQUEST_LENGTH);
-			if ( dsResponse != OK ) {
-				// bad response processing...
-				std::cout << "Response not OK: " << dsResponse << "\n";
-			}
-		} catch ( CDCSendException& ex ) {
-			std::cout << ex.getDescr() << "\n";
-			// send exception processing...
-		} catch ( CDCReceiveException& ex ) {
-			std::cout << ex.getDescr() << "\n";
-			// receive exception processing...
-		}
+    for ( int sendCounter = 0; sendCounter < 10; sendCounter++ ) {
+        try {
+            // sending read temperature request and checking response of the device
+            DSResponse dsResponse = testImp->sendData(temperatureRequest, REQUEST_LENGTH);
+            if ( dsResponse != OK ) {
+                // bad response processing...
+                std::cout << "Response not OK: " << dsResponse << "\n";
+            }
+        } catch ( CDCSendException& ex ) {
+            std::cout << ex.getDescr() << "\n";
+            // send exception processing...
+        } catch ( CDCReceiveException& ex ) {
+            std::cout << ex.getDescr() << "\n";
+            // receive exception processing...
+        }
 
-		// if reception is stopped, is not further possible to send and
-		// to receive any next messages
+        // if reception is stopped, is not further possible to send and
+        // to receive any next messages
         if ( testImp->isReceptionStopped() ) {
             delete testImp;
             return 1;
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
         // we should wait for a while - to give USB device time to get ready
         // to succesfully process next message
         std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
+    }
 
     delete testImp;
     return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 MICRORISC s.r.o.
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * TR module programming example (*.trcnfg file)
  *
  * @author      Dusan Machut
- * @version     1.0.0
+ * @version     1.0.1
  * @date        8.5.2018
  */
 
@@ -64,13 +64,13 @@ FILE *file = NULL;
  * @param [in,out]  data    Pointer to data buffer.
  * @param           length  The length of the data.
  */
-void printDataInHex(unsigned char* data, unsigned int length) {
+void printDataInHex(unsigned char* data, unsigned int length)
+{
     for ( int i = 0; i < length; i++ ) {
         std::cout << "0x" << std::hex << (int)*data;
         data++;
-        if ( i != (length - 1) ) {
+        if ( i != (length - 1) )
             std::cout << " ";
-        }
     }
     std::cout << std::dec << "\n";
 }
@@ -83,149 +83,136 @@ void printDataInHex(unsigned char* data, unsigned int length) {
 int main(int argc, char** argv)
 {
 
-  PMResponse pmResponse;
-  uint32_t CfgFileSize;
-  int Cnt;
+    PMResponse pmResponse;
+    uint32_t CfgFileSize;
+    int Cnt;
 
 #if defined(WIN32) && defined(_DEBUG)
-  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-  std::string port_name;
-  // check input parameters
-  if (argc < 3) {
-    std::cerr << "Usage" << std::endl;
-    std::cerr << "  PgmTrcnfgExample <port-name> <file-name>" << std::endl << std::endl;
-    std::cerr << "Example" << std::endl;
-    std::cerr << "  PgmTrcnfgExample COM5 test.trcnfg" << std::endl;
-    std::cerr << "  PgmTrcnfgExample /dev/ttyACM0 test.trcnfg" << std::endl;
-    return (-1);
-  }
-  else {
-    port_name = argv[1];
-
-    // We assume argv[2] is a filename to open
-    file = fopen( argv[2], "r" );
-    // fopen returns 0, the NULL pointer, on failure
-    if ( file == 0 ) {
-      std::cout << "Could not open input file" << std::endl;
-      return (-2);
-    }
-
-    // check configuration file size
-    fseek(file, 0, SEEK_END);
-    CfgFileSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    if (CfgFileSize < 33) {
-      std::cout << "Wrong format of *.trcnfg file" << std::endl;
-    }
-    else {
-      // prepare configuration data
-      for(Cnt=0; Cnt<32; Cnt++){
-        HwProfile[Cnt] = fgetc(file);
-      }
-      RfPgmCfg = fgetc(file);
-    }
-    fclose(file);
-  }
-
-  CDCImpl* testImp = NULL;
-  try {
-    // crate cdc implementation object;;
-    testImp = ant_new CDCImpl(port_name.c_str());
-
-    // check the connection to GW-USB-xx device
-    bool test = testImp->test();
-    if ( test ) {
-      std::cout << "Connection test OK\n";
+    std::string port_name;
+    // check input parameters
+    if (argc < 3) {
+        std::cerr << "Usage" << std::endl;
+        std::cerr << "  PgmTrcnfgExample <port-name> <file-name>" << std::endl << std::endl;
+        std::cerr << "Example" << std::endl;
+        std::cerr << "  PgmTrcnfgExample COM5 test.trcnfg" << std::endl;
+        std::cerr << "  PgmTrcnfgExample /dev/ttyACM0 test.trcnfg" << std::endl;
+        return (-1);
     } else {
-      std::cout << "Connection test FAILED\n";
-      delete testImp;
-      return 2;
-    }
-  } catch ( CDCImplException& e ) {
-    std::cout << e.getDescr() << "\n";
-    if ( testImp != NULL ) {
-      delete testImp;
-    }
-    return 1;
-  }
+        port_name = argv[1];
 
-  // switch device to programming mode
-  try {
-    std::cout << "Entering programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->enterProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode OK" << std::endl;
-    }
-    else {
-      std::cout << "Programming mode ERROR" << std::endl;
-      if ( testImp != NULL ) {
-        delete testImp;
-      }
-      return 1;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
+        // We assume argv[2] is a filename to open
+        file = fopen( argv[2], "r" );
+        // fopen returns 0, the NULL pointer, on failure
+        if ( file == 0 ) {
+            std::cout << "Could not open input file" << std::endl;
+            return (-2);
+        }
 
-  // write configuration data to TR module in GW-USB-xx device
-  for (Cnt=0; Cnt<2; Cnt++){
-    if (Cnt == 0){
-      std::cout << "HW profile data to write:" << std::endl;
-      printDataInHex(HwProfile, 32);
+        // check configuration file size
+        fseek(file, 0, SEEK_END);
+        CfgFileSize = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        if (CfgFileSize < 33) {
+            std::cout << "Wrong format of *.trcnfg file" << std::endl;
+        } else {
+            // prepare configuration data
+            for(Cnt=0; Cnt<32; Cnt++)
+                HwProfile[Cnt] = fgetc(file);
+            RfPgmCfg = fgetc(file);
+        }
+        fclose(file);
     }
-    else {
-      std::cout << "RFPGM data to write:" << std::endl;
-      printDataInHex(&RfPgmCfg, 1);
-    }
-    std::cout << "Data sent to device" << std::endl;
 
-    // write data to TR module
+    CDCImpl* testImp = NULL;
     try {
-      if (Cnt == 0){
-        pmResponse = testImp->upload(TARGET_CFG_HWP_W, HwProfile, 32);
-      }
-      else {
-        pmResponse = testImp->upload(TARGET_CFG_RFPGM_W, &RfPgmCfg, 1);
-      }
+        // crate cdc implementation object;;
+        testImp = ant_new CDCImpl(port_name.c_str());
 
-      if ( pmResponse == PMResponse::OK ) {
-        std::cout << "Data programming OK" << std::endl;
-      }
-      else {
-        std::cout << "Data programming failed" << std::endl;
-      }
+        // check the connection to GW-USB-xx device
+        bool test = testImp->test();
+        if ( test ) {
+            std::cout << "Connection test OK\n";
+        } else {
+            std::cout << "Connection test FAILED\n";
+            delete testImp;
+            return 2;
+        }
+    } catch ( CDCImplException& e ) {
+        std::cout << e.getDescr() << "\n";
+        if ( testImp != NULL )
+            delete testImp;
+        return 1;
+    }
+
+    // switch device to programming mode
+    try {
+        std::cout << "Entering programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->enterProgrammingMode();
+        if ( pteResponse == PTEResponse::OK ) {
+            std::cout << "Programming mode OK" << std::endl;
+        } else {
+            std::cout << "Programming mode ERROR" << std::endl;
+            if ( testImp != NULL )
+                delete testImp;
+            return 1;
+        }
     } catch ( CDCSendException& ex ) {
-      std::cout << ex.getDescr() << std::endl;
-      // send exception processing...
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
     } catch ( CDCReceiveException& ex ) {
-      std::cout << ex.getDescr() << std::endl;
-      // receive exception processing...
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
     }
-  }
 
-  // switch device to normal mode
-  try {
-    std::cout << "Terminating programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->terminateProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode termination OK" << std::endl;
-    }
-    else {
-      std::cout << "Programming mode termination ERROR" << std::endl;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
+    // write configuration data to TR module in GW-USB-xx device
+    for (Cnt=0; Cnt<2; Cnt++) {
+        if (Cnt == 0) {
+            std::cout << "HW profile data to write:" << std::endl;
+            printDataInHex(HwProfile, 32);
+        } else {
+            std::cout << "RFPGM data to write:" << std::endl;
+            printDataInHex(&RfPgmCfg, 1);
+        }
+        std::cout << "Data sent to device" << std::endl;
 
-  delete testImp;
-  return 0;
+        // write data to TR module
+        try {
+            if (Cnt == 0)
+                pmResponse = testImp->upload(TARGET_CFG_HWP_W, HwProfile, 32);
+            else
+                pmResponse = testImp->upload(TARGET_CFG_RFPGM_W, &RfPgmCfg, 1);
+
+            if ( pmResponse == PMResponse::OK )
+                std::cout << "Data programming OK" << std::endl;
+            else
+                std::cout << "Data programming failed" << std::endl;
+        } catch ( CDCSendException& ex ) {
+            std::cout << ex.getDescr() << std::endl;
+            // send exception processing...
+        } catch ( CDCReceiveException& ex ) {
+            std::cout << ex.getDescr() << std::endl;
+            // receive exception processing...
+        }
+    }
+
+    // switch device to normal mode
+    try {
+        std::cout << "Terminating programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->terminateProgrammingMode();
+        if ( pteResponse == PTEResponse::OK )
+            std::cout << "Programming mode termination OK" << std::endl;
+        else
+            std::cout << "Programming mode termination ERROR" << std::endl;
+    } catch ( CDCSendException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
+    } catch ( CDCReceiveException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
+    }
+
+    delete testImp;
+    return 0;
 }

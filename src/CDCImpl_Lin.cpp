@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+* Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,10 @@ enum EventType { READ_EVENT, WRITE_EVENT };
 int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout);
 
 /*
- *	Function of reading thread of incomming COM-port messages.
+ *	Function of reading thread of incoming COM-port messages.
  */
-int CDCImplPrivate::readMsgThread() {
+int CDCImplPrivate::readMsgThread()
+{
     ustring receivedBytes;
     fd_set waitEvents;
     std::string errorDescr;
@@ -50,47 +51,42 @@ int CDCImplPrivate::readMsgThread() {
 
 
     try  {
-		int maxEventNum = ((portHandle > readEndEvent)? portHandle:readEndEvent) + 1;
+        int maxEventNum = ((portHandle > readEndEvent)? portHandle:readEndEvent) + 1;
 
-		// signal for main thread to continue with initialization
-		setMyEvent(readStartEvent);
+        // signal for main thread to continue with initialization
+        setMyEvent(readStartEvent);
 
-		bool run = true;
-		receivedBytes.clear();
-		while (run) {
-			FD_ZERO(&waitEvents);
-			FD_SET(portHandle, &waitEvents);
-			FD_SET(readEndEvent, &waitEvents);
+        bool run = true;
+        receivedBytes.clear();
+        while (run) {
+            FD_ZERO(&waitEvents);
+            FD_SET(portHandle, &waitEvents);
+            FD_SET(readEndEvent, &waitEvents);
 
-			int waitResult = select(maxEventNum, &waitEvents, NULL, NULL, NULL);
-			switch (waitResult) {
-				case -1:
-					THROW_EXC(CDCReceiveException, "Waiting for event in read cycle failed with error " << errno);
-					break;
-				case 0:
-					// only in the case of timeout period expires
-					break;
-				default:
-				{
-					// read in characters into input buffer
-					if (FD_ISSET(portHandle, &waitEvents)) {
-						int messageEnd = appendDataFromPort(buffer, BUFF_SIZE, receivedBytes);
-						if (messageEnd != -1) {
-							processAllMessages(receivedBytes);
-						}
-					}
+            int waitResult = select(maxEventNum, &waitEvents, NULL, NULL, NULL);
+            switch (waitResult) {
+            case -1:
+                THROW_EXC(CDCReceiveException, "Waiting for event in read cycle failed with error " << errno);
+                break;
+            case 0:
+                // only in the case of timeout period expires
+                break;
+            default:
+                // read in characters into input buffer
+                if (FD_ISSET(portHandle, &waitEvents)) {
+                    int messageEnd = appendDataFromPort(buffer, BUFF_SIZE, receivedBytes);
+                    if (messageEnd != -1)
+                        processAllMessages(receivedBytes);
+                }
 
-					// read end
-					if (FD_ISSET(readEndEvent, &waitEvents)) {
-						run = false; //goto READ_END;
-					}
-				}
-			}
-
-		}
+                // read end
+                if (FD_ISSET(readEndEvent, &waitEvents))
+                    run = false; //goto READ_END;
+            }
+        }
     }
     catch (CDCReceiveException &e) {
-		setLastReceptionError(e.what());
+        setLastReceptionError(e.what());
         setReceptionStopped(true);
         return 1;
     }
@@ -105,29 +101,29 @@ int CDCImplPrivate::readMsgThread() {
  *		   -1, if no message end character was appended into specified buffer
  * @throw CDCReceiveException
  */
-int CDCImplPrivate::appendDataFromPort(unsigned char* buf, unsigned buflen, ustring& destBuffer) {
-	int messageEnd = -1;
+int CDCImplPrivate::appendDataFromPort(unsigned char* buf, unsigned buflen, ustring& destBuffer)
+{
+    int messageEnd = -1;
 
     ssize_t readResult = read(portHandle, (void*)buf, buflen);
-    if (readResult == -1) {
+    if (readResult == -1)
         // error in communication
-		THROW_EXC(CDCReceiveException, "Appending data from COM-port failed with error " << errno);
-    }
+        THROW_EXC(CDCReceiveException, "Appending data from COM-port failed with error " << errno);
 
     destBuffer.append(buf, readResult);
     size_t endPos = destBuffer.find(0x0D);
-    if (endPos != std::string::npos) {
+    if (endPos != std::string::npos)
         messageEnd = endPos;
-    }
 
-	return messageEnd;
+    return messageEnd;
 }
 
 /*
  * Sends command stored in buffer to COM port.
  * @param cmd command to send to COM-port.
  */
-void CDCImplPrivate::sendCommand(Command& cmd) {
+void CDCImplPrivate::sendCommand(Command& cmd)
+{
     BuffCommand buffCmd = commandToBuffer(cmd);
     unsigned char* dataToWrite = buffCmd.cmd;
     int dataLen = buffCmd.len;
@@ -137,18 +133,15 @@ void CDCImplPrivate::sendCommand(Command& cmd) {
 
     while (dataLen > 0) {
         int selResult = selectEvents(fds, WRITE_EVENT, TM_SEND_MSG);
-        if (selResult == -1) {
-    		THROW_EXC(CDCSendException, "Sending message failed with error " << errno);
-        }
+        if (selResult == -1)
+            THROW_EXC(CDCSendException, "Sending message failed with error " << errno);
 
-        if (selResult == 0) {
+        if (selResult == 0)
             throw CDCSendException("Waiting for send timeouted");
-        }
 
         int writeResult = write(portHandle, dataToWrite, dataLen);
-        if (writeResult == -1) {
-    		THROW_EXC(CDCSendException, "Sending message failed with error " << errno);
-        }
+        if (writeResult == -1)
+            THROW_EXC(CDCSendException, "Sending message failed with error " << errno);
 
         dataLen -= writeResult;
         dataToWrite += writeResult;
@@ -158,29 +151,27 @@ void CDCImplPrivate::sendCommand(Command& cmd) {
 /////////////////////////////////////////////////////////
 void CDCImplPrivate::setMyEvent(HANDLE evnt)
 {
-	uint64_t readEndData = 1;
-	ssize_t ret = write(evnt, &readEndData, sizeof(uint64_t));
-	if (ret != sizeof(uint64_t)) {
-	    THROW_EXC(CDCImplException, "Signaling new message event failed with error " << errno);
-	}
+    uint64_t readEndData = 1;
+    ssize_t ret = write(evnt, &readEndData, sizeof(uint64_t));
+    if (ret != sizeof(uint64_t))
+        THROW_EXC(CDCImplException, "Signaling new message event failed with error " << errno);
 }
 
 void CDCImplPrivate::resetMyEvent(HANDLE evnt)
 {
-	//TODO empty
+    //TODO empty
 }
 
 void CDCImplPrivate::createMyEvent(HANDLE & event)
 {
     event = eventfd(0, 0);
-    if (event == -1) {
-	    THROW_EXC(CDCImplException, "Create new message event failed with error " << errno);
-    }
+    if (event == -1)
+        THROW_EXC(CDCImplException, "Create new message event failed with error " << errno);
 }
 
 void CDCImplPrivate::destroyMyEvent(HANDLE & event)
 {
-	close(event);
+    close(event);
 }
 
 /*
@@ -194,46 +185,41 @@ DWORD CDCImplPrivate::waitForMyEvent(HANDLE evnt, DWORD timeout)
     int waitResult = selectEvents(events, READ_EVENT, timeout);
 
     switch (waitResult) {
-        case -1:
-        {
-    	    THROW_EXC(CDCReceiveException, "Waiting in selectEvents failed with error " << errno);
-    	    break;
-        }
-        case 0:
-        	THROW_EXC(CDCReceiveException, "Waiting for event timeout");
-        	break;
-        default:
-            // OK
-			//TODO aditional check - is it necessary here?
-        	uint64_t respData = 0;
-			  if (read(evnt, &respData, sizeof(uint_fast64_t)) == -1) {
-	    	    THROW_EXC(CDCReceiveException, "Waiting for response failed with error " << errno);
-			  }
-            break;
+    case -1:
+        THROW_EXC(CDCReceiveException, "Waiting in selectEvents failed with error " << errno);
+        break;
+    case 0:
+        THROW_EXC(CDCReceiveException, "Waiting for event timeout");
+        break;
+    default:
+        // OK
+        //TODO aditional check - is it necessary here?
+        uint64_t respData = 0;
+        if (read(evnt, &respData, sizeof(uint_fast64_t)) == -1)
+            THROW_EXC(CDCReceiveException, "Waiting for response failed with error " << errno);
+        break;
     }
     return waitResult;
 }
 
 
 /* Configures and opens port for communication. */
-HANDLE CDCImplPrivate::openPort(const std::string& portName) {
+HANDLE CDCImplPrivate::openPort(const std::string& portName)
+{
     HANDLE portHandle = open(portName.c_str(), O_RDWR | O_NOCTTY);
 
-	//  Handle the error.
-	if (portHandle == -1) {
-	    THROW_EXC(CDCImplException, "Port handle creation failed with error " << errno);
-	}
+    //  Handle the error.
+    if (portHandle == -1)
+        THROW_EXC(CDCImplException, "Port handle creation failed with error " << errno);
 
-    if (isatty(portHandle) == 0) {
-	    THROW_EXC(CDCImplException, "Specified file is not associated with terminal " << errno);
-    }
+    if (isatty(portHandle) == 0)
+        THROW_EXC(CDCImplException, "Specified file is not associated with terminal " << errno);
 
     struct termios portOptions;
 
     // get current settings of the serial port
-    if (tcgetattr(portHandle, &portOptions) == -1) {
-	    THROW_EXC(CDCImplException, "Port parameters getting failed with error " << errno);
-    }
+    if (tcgetattr(portHandle, &portOptions) == -1)
+        THROW_EXC(CDCImplException, "Port parameters getting failed with error " << errno);
 
     /*
      * Turn of:
@@ -252,7 +238,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName) {
     portOptions.c_oflag &= ~(OPOST);
 
     /*
-     * Enable reading of incomming characters, 8 bits per byte.
+     * Enable reading of incoming characters, 8 bits per byte.
      */
     portOptions.c_cflag |= CREAD;
     portOptions.c_cflag &= ~(CSIZE | PARENB | CSTOPB);
@@ -270,33 +256,30 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName) {
     portOptions.c_cc[VMIN] = 1;
     portOptions.c_cc[VTIME] = 0;
 
-    if (tcsetattr(portHandle, TCSANOW, &portOptions) == -1) {
-	    THROW_EXC(CDCImplException, "Port parameters setting failed with error " << errno);
-    }
+    if (tcsetattr(portHandle, TCSANOW, &portOptions) == -1)
+        THROW_EXC(CDCImplException, "Port parameters setting failed with error " << errno);
 
     // required to make flush to work because of Linux kernel bug
-    if ( sleep(2) != 0 ) {
-	    THROW_EXC(CDCImplException, "Sleeping before flushing the port not elapsed");
-    }
+    if ( sleep(2) != 0 )
+        THROW_EXC(CDCImplException, "Sleeping before flushing the port not elapsed");
 
-    if ( tcflush(portHandle, TCIOFLUSH) != 0 ) {
-	    THROW_EXC(CDCImplException, "Port flushing failed with error" << errno);
-    }
+    if ( tcflush(portHandle, TCIOFLUSH) != 0 )
+        THROW_EXC(CDCImplException, "Port flushing failed with error" << errno);
 
     return portHandle;
 }
 
 void CDCImplPrivate::closePort(HANDLE & portHandle)
 {
-	close(portHandle);
+    close(portHandle);
 }
 
 /////////////////////////////////////
 /* Wrapper for standard 'select' function. */
-int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout) {
-    if (fds.empty()) {
+int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout)
+{
+    if (fds.empty())
         return 0;
-    }
 
     int maxFd = 0;
     fd_set selFds;
@@ -305,9 +288,8 @@ int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout) {
     std::set<int>::iterator fdsIt = fds.begin();
     for (;fdsIt != fds.end(); fdsIt++) {
         FD_SET(*fdsIt, &selFds);
-        if (*fdsIt > maxFd) {
+        if (*fdsIt > maxFd)
             maxFd = (*fdsIt);
-        }
     }
 
     maxFd++;
@@ -316,25 +298,22 @@ int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout) {
         waitTime.tv_sec = timeout;
         waitTime.tv_usec = 0;
 
-        if (evType == READ_EVENT) {
+        if (evType == READ_EVENT)
             return select(maxFd, &selFds, NULL, NULL, &waitTime);
-        }
-        if (evType == WRITE_EVENT) {
+
+        if (evType == WRITE_EVENT)
             return select(maxFd, NULL, &selFds, NULL, &waitTime);
-        }
 
         // no other event type - params error
         return -1;
     }
 
-    if (evType == READ_EVENT) {
+    if (evType == READ_EVENT)
         return select(maxFd, &selFds, NULL, NULL, NULL);
-    }
-    if (evType == WRITE_EVENT) {
+
+    if (evType == WRITE_EVENT)
         return select(maxFd, NULL, &selFds, NULL, NULL);
-    }
 
     // no other event type - params error
     return -1;
 }
-

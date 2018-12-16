@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 MICRORISC s.r.o.
+* Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * TR module programming example (*.iqrf file)
  *
  * @author      Dusan Machut
- * @version     1.0.0
+ * @version     1.0.1
  * @date        1.5.2018
  */
 
@@ -70,44 +70,40 @@ FILE *file = NULL;
  * @param [in,out]  data    Pointer to data buffer.
  * @param           length  The length of the data.
  */
-void printDataInHex(unsigned char* data, unsigned int length) {
+void printDataInHex(unsigned char* data, unsigned int length)
+{
     for ( int i = 0; i < length; i++ ) {
         std::cout << "0x" << std::hex << (int)*data;
         data++;
-        if ( i != (length - 1) ) {
+        if ( i != (length - 1) )
             std::cout << " ";
-        }
     }
     std::cout << std::dec << "\n";
 }
 
 /**
- * Convetr two ASCII chars tu number
+ * Convert two ASCII chars to number
  * @param dataByteHi High nibble in ASCII
  * @param dataByteLo Low nibble in ASCII
  * @return Number
  */
 uint8_t iqrfPgmConvertToNum(uint8_t dataByteHi, uint8_t dataByteLo)
 {
-  uint8_t result = 0;
+    uint8_t result = 0;
 
-  /* convert High nibble */
-  if (dataByteHi >= '0' && dataByteHi <= '9') {
-    result = (dataByteHi - '0') << 4;
-  }
-  else if (dataByteHi >= 'a' && dataByteHi <= 'f') {
-    result = (dataByteHi - 87) << 4;
-  }
+    /* convert High nibble */
+    if (dataByteHi >= '0' && dataByteHi <= '9')
+        result = (dataByteHi - '0') << 4;
+    else if (dataByteHi >= 'a' && dataByteHi <= 'f')
+        result = (dataByteHi - 87) << 4;
 
-  /* convert Low nibble */
-  if (dataByteLo >= '0' && dataByteLo <= '9') {
-    result |= (dataByteLo - '0');
-  }
-  else if (dataByteLo >= 'a' && dataByteLo <= 'f') {
-    result |= (dataByteLo - 87);
-  }
+    /* convert Low nibble */
+    if (dataByteLo >= '0' && dataByteLo <= '9')
+        result |= (dataByteLo - '0');
+    else if (dataByteLo >= 'a' && dataByteLo <= 'f')
+        result |= (dataByteLo - 87);
 
-  return(result);
+    return(result);
 }
 
 /**
@@ -116,13 +112,14 @@ uint8_t iqrfPgmConvertToNum(uint8_t dataByteHi, uint8_t dataByteLo)
  */
 char iqrfReadByteFromFile(void)
 {
-  int ReadChar;
+    int ReadChar;
 
-  ReadChar = fgetc( file );
+    ReadChar = fgetc( file );
 
-  if (ReadChar == EOF) return 0;
+    if (ReadChar == EOF)
+        return 0;
 
-  return ReadChar;
+    return ReadChar;
 }
 
 /**
@@ -141,36 +138,31 @@ repeat_read:
 
     // read one char from file
     if (FirstChar == '#') {
-      // read data to end of line
-      while (((FirstChar = iqrfReadByteFromFile()) != 0) && (FirstChar != 0x0D));
+        // read data to end of line
+        while (((FirstChar = iqrfReadByteFromFile()) != 0) && (FirstChar != 0x0D))
+            ;  /* void */
     }
 
     // if end of line
     if (FirstChar == 0x0D) {
-      // read second code 0x0A
-      iqrfReadByteFromFile();
-      if (CodeLineBufferPtr == 0) {
-        // read another line
-        goto repeat_read;
-      }
-      if (CodeLineBufferPtr == 20) {
-        // line with data readed successfully
-        return(IQRF_PGM_FILE_DATA_READY);
-      }
-      else {
-        // wrong file format (error)
-        return(IQRF_PGM_FILE_DATA_ERROR);
-      }
+        // read second code 0x0A
+        iqrfReadByteFromFile();
+        if (CodeLineBufferPtr == 0)
+            goto repeat_read;                   // read another line
+        if (CodeLineBufferPtr == 20)
+            return(IQRF_PGM_FILE_DATA_READY);   // line with data read successfully
+        else
+            return(IQRF_PGM_FILE_DATA_ERROR);   // wrong file format (error)
     }
 
     // if end of file
-    if (FirstChar == 0) {
-      return(IQRF_PGM_END_OF_FILE);
-    }
+    if (FirstChar == 0)
+        return(IQRF_PGM_END_OF_FILE);
 
     // read second character from code file
     SecondChar = tolower(iqrfReadByteFromFile());
-    if (CodeLineBufferPtr >= 20) return(IQRF_PGM_FILE_DATA_ERROR);
+    if (CodeLineBufferPtr >= 20)
+        return(IQRF_PGM_FILE_DATA_ERROR);
     // convert chars to number and store to buffer
     IqrfPgmCodeLineBuffer[CodeLineBufferPtr++] = iqrfPgmConvertToNum(FirstChar, SecondChar);
     // read next data
@@ -184,123 +176,115 @@ repeat_read:
  */
 int main(int argc, char** argv)
 {
-  int OpResult;
+    int OpResult;
 
 #if defined(WIN32) && defined(_DEBUG)
-  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-  std::string port_name;
-  // check input parameters
-  if (argc < 3) {
-    std::cerr << "Usage" << std::endl;
-    std::cerr << "  PgmIqrfExample <port-name> <file-name>" << std::endl << std::endl;
-    std::cerr << "Example" << std::endl;
-    std::cerr << "  PgmIqrfExample COM5 test.iqrf" << std::endl;
-    std::cerr << "  PgmIqrfExample /dev/ttyACM0 test.iqrf" << std::endl;
-    return (-1);
-  }
-  else {
-    port_name = argv[1];
-
-    // We assume argv[2] is a filename to open
-    file = fopen( argv[2], "r" );
-    // fopen returns 0, the NULL pointer, on failure
-    if ( file == 0 ) {
-      std::cout << "Could not open input file" << std::endl;
-      return (-2);
-    }
-  }
-
-  CDCImpl* testImp = NULL;
-  try {
-    // crate cdc implementation object;;
-    testImp = ant_new CDCImpl(port_name.c_str());
-
-    // check the connection to GW-USB-xx device
-    bool test = testImp->test();
-    if ( test ) {
-      std::cout << "Connection test OK\n";
+    std::string port_name;
+    // check input parameters
+    if (argc < 3) {
+        std::cerr << "Usage" << std::endl;
+        std::cerr << "  PgmIqrfExample <port-name> <file-name>" << std::endl << std::endl;
+        std::cerr << "Example" << std::endl;
+        std::cerr << "  PgmIqrfExample COM5 test.iqrf" << std::endl;
+        std::cerr << "  PgmIqrfExample /dev/ttyACM0 test.iqrf" << std::endl;
+        return (-1);
     } else {
-      std::cout << "Connection test FAILED\n";
-      delete testImp;
-      fclose(file);
-      return 2;
-    }
-  } catch ( CDCImplException& e ) {
-    std::cout << e.getDescr() << "\n";
-    if ( testImp != NULL ) {
-      delete testImp;
-    }
-    fclose(file);
-    return 1;
-  }
+        port_name = argv[1];
 
-  // switch device to programming mode
-  try {
-    std::cout << "Entering programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->enterProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode OK" << std::endl;
+        // We assume argv[2] is a filename to open
+        file = fopen( argv[2], "r" );
+        // fopen returns 0, the NULL pointer, on failure
+        if ( file == 0 ) {
+            std::cout << "Could not open input file" << std::endl;
+            return (-2);
+        }
     }
-    else {
-      std::cout << "Programming mode ERROR" << std::endl;
-      if ( testImp != NULL ) {
-        delete testImp;
-      }
-      fclose(file);
-      return 1;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
 
-  // read data from input file and write it to TR module in GW-USB-xx device
-  while ((OpResult = iqrfPgmReadIQRFFileLine()) == IQRF_PGM_FILE_DATA_READY) {
-    std::cout << "Data to write:" << std::endl;
-    printDataInHex(IqrfPgmCodeLineBuffer, 20);
-    std::cout << "Data sent to device" << std::endl;
-
-    // write data to TR module
+    CDCImpl* testImp = NULL;
     try {
-      PMResponse pmResponse = testImp->upload(TARGET_PLUGIN_W, IqrfPgmCodeLineBuffer, 20);
-      if ( pmResponse == PMResponse::OK ) {
-        std::cout << "Data programming OK" << std::endl;
-      }
-      else {
-        std::cout << "Data programming failed" << std::endl;
-      }
+        // crate cdc implementation object;;
+        testImp = ant_new CDCImpl(port_name.c_str());
+
+        // check the connection to GW-USB-xx device
+        bool test = testImp->test();
+        if ( test ) {
+            std::cout << "Connection test OK\n";
+        } else {
+            std::cout << "Connection test FAILED\n";
+            delete testImp;
+            fclose(file);
+            return 2;
+        }
+    } catch ( CDCImplException& e ) {
+        std::cout << e.getDescr() << "\n";
+        if ( testImp != NULL )
+            delete testImp;
+        fclose(file);
+        return 1;
+    }
+
+    // switch device to programming mode
+    try {
+        std::cout << "Entering programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->enterProgrammingMode();
+        if ( pteResponse == PTEResponse::OK ) {
+            std::cout << "Programming mode OK" << std::endl;
+        } else {
+            std::cout << "Programming mode ERROR" << std::endl;
+            if ( testImp != NULL )
+                delete testImp;
+            fclose(file);
+            return 1;
+        }
     } catch ( CDCSendException& ex ) {
-      std::cout << ex.getDescr() << std::endl;
-      // send exception processing...
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
     } catch ( CDCReceiveException& ex ) {
-      std::cout << ex.getDescr() << std::endl;
-      // receive exception processing...
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
     }
-  }
 
-  // switch device to normal mode
-  try {
-    std::cout << "Terminating programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->terminateProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode termination OK" << std::endl;
-    }
-    else {
-      std::cout << "Programming mode termination ERROR" << std::endl;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
+    // read data from input file and write it to TR module in GW-USB-xx device
+    while ((OpResult = iqrfPgmReadIQRFFileLine()) == IQRF_PGM_FILE_DATA_READY) {
+        std::cout << "Data to write:" << std::endl;
+        printDataInHex(IqrfPgmCodeLineBuffer, 20);
+        std::cout << "Data sent to device" << std::endl;
 
-  delete testImp;
-  fclose(file);
-  return 0;
+        // write data to TR module
+        try {
+            PMResponse pmResponse = testImp->upload(TARGET_PLUGIN_W, IqrfPgmCodeLineBuffer, 20);
+            if ( pmResponse == PMResponse::OK )
+                std::cout << "Data programming OK" << std::endl;
+            else
+                std::cout << "Data programming failed" << std::endl;
+        } catch ( CDCSendException& ex ) {
+            std::cout << ex.getDescr() << std::endl;
+            // send exception processing...
+        } catch ( CDCReceiveException& ex ) {
+            std::cout << ex.getDescr() << std::endl;
+            // receive exception processing...
+        }
+    }
+
+    // switch device to normal mode
+    try {
+        std::cout << "Terminating programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->terminateProgrammingMode();
+        if ( pteResponse == PTEResponse::OK )
+            std::cout << "Programming mode termination OK" << std::endl;
+        else
+            std::cout << "Programming mode termination ERROR" << std::endl;
+    } catch ( CDCSendException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
+    } catch ( CDCReceiveException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
+    }
+
+    delete testImp;
+    fclose(file);
+    return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 MICRORISC s.r.o.
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
  * TR module memory reading example
  *
  * @author      Dusan Machut
- * @version     1.0.0
- * @date        19.5.2018
+ * @version     1.0.1
+ * @date        16.12.2018
  */
 
 #include <CDCImpl.h>
@@ -65,13 +65,13 @@ void printDataInHex(unsigned char *data, unsigned int length);
  * @param [in,out]  data    Pointer to data buffer.
  * @param           length  The length of the data.
  */
-void printDataInHex(unsigned char* data, unsigned int length) {
+void printDataInHex(unsigned char* data, unsigned int length)
+{
     for ( int i = 0; i < length; i++ ) {
         std::cout << "0x" << std::hex << (int)*data;
         data++;
-        if ( i != (length - 1) ) {
+        if ( i != (length - 1) )
             std::cout << " ";
-        }
     }
     std::cout << std::dec << "\n";
 }
@@ -83,156 +83,151 @@ void printDataInHex(unsigned char* data, unsigned int length) {
  */
 int main(int argc, char** argv)
 {
-  uint8_t   RqBuffer[32];
-  uint8_t   RsBuffer[256];
-  uint16_t  MemAddress;
-  int Cnt, CntEnd;
-  int Target;
-  unsigned int RsDataLen;
+    uint8_t   RqBuffer[32];
+    uint8_t   RsBuffer[256];
+    uint16_t  MemAddress;
+    int Cnt, CntEnd;
+    int Target;
+    unsigned int RsDataLen;
 
 #if defined(WIN32) && defined(_DEBUG)
-  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-  std::string port_name;
-  // check input parameters
-  if (argc < 3) {
-    std::cerr << "Usage" << std::endl;
-    std::cerr << "  ReadMemoryExample <port-name> <-memory>" << std::endl << std::endl;
-    std::cerr << "  memory: -flash or -eeprom or -eeeprom" << std::endl << std::endl;
-    std::cerr << "Example" << std::endl;
-    std::cerr << "  ReadMemoryExample COM5 -eeprom" << std::endl;
-    std::cerr << "  ReadMemoryExample /dev/ttyACM0 -eeprom" << std::endl;
-    return (-1);
-  }
-  else {
-    port_name = argv[1];
+    std::string port_name;
+    // check input parameters
+    if (argc < 3) {
+        std::cerr << "Usage" << std::endl;
+        std::cerr << "  ReadMemoryExample <port-name> <-memory>" << std::endl << std::endl;
+        std::cerr << "  memory: -flash or -eeprom or -eeeprom" << std::endl << std::endl;
+        std::cerr << "Example" << std::endl;
+        std::cerr << "  ReadMemoryExample COM5 -eeprom" << std::endl;
+        std::cerr << "  ReadMemoryExample /dev/ttyACM0 -eeprom" << std::endl;
+        return (-1);
+    } else {
+        port_name = argv[1];
 
-    if (strcmp(argv[2], "-eeprom") == 0) Target = TARGET_EEPROM_R;
-    else {
-      if (strcmp(argv[2], "-eeeprom") == 0) Target = TARGET_EEEPROM_R;
-      else {
-        if (strcmp(argv[2], "-flash") == 0) Target = TARGET_FLASH_R;
+        if (strcmp(argv[2], "-eeprom") == 0)
+            Target = TARGET_EEPROM_R;
+        else if (strcmp(argv[2], "-eeeprom") == 0)
+            Target = TARGET_EEEPROM_R;
+        else if (strcmp(argv[2], "-flash") == 0)
+            Target = TARGET_FLASH_R;
         else {
           std::cerr << "Unsupported memory type" << std::endl;
           return(-2);
         }
-      }
-    }
-  }
-
-  CDCImpl* testImp = NULL;
-  try {
-    // crate cdc implementation object;;
-    testImp = ant_new CDCImpl(port_name.c_str());
-
-    // check the connection to GW-USB-xx device
-    bool test = testImp->test();
-    if ( test ) {
-      std::cout << "Connection test OK\n";
-    } else {
-      std::cout << "Connection test FAILED\n";
-      delete testImp;
-      return 2;
-    }
-  } catch ( CDCImplException& e ) {
-    std::cout << e.getDescr() << "\n";
-    if ( testImp != NULL ) {
-      delete testImp;
-    }
-    return 1;
-  }
-
-  // switch device to programming mode
-  try {
-    std::cout << "Entering programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->enterProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode OK" << std::endl;
-    }
-    else {
-      std::cout << "Programming mode ERROR" << std::endl;
-      if ( testImp != NULL ) {
-        delete testImp;
-      }
-      return 1;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
-
-  // read selected memory data from TR module in GW-USB-xx device
-  if (Target == TARGET_FLASH_R) MemAddress = 0x3A00;    // start address for FLASH
-  else MemAddress = 0x0000;                             // start address for internal / external EEPROM
-
-  CntEnd = 8;
-  if (Target == TARGET_EEPROM_R) CntEnd = 6;
-
-  for (Cnt = 0; Cnt < CntEnd; Cnt++) {
-    switch (Target){
-      case TARGET_EEPROM_R:
-        printf("Reading 32 bytes of data from internal EEPROM - Address 0x%04x\n\r", MemAddress);
-        break;
-
-      case TARGET_EEEPROM_R:
-        printf("Reading 32 bytes of data from external EEPROM - Address 0x%04x\n\r", MemAddress);
-        break;
-
-      case TARGET_FLASH_R:
-        printf("Reading 32 bytes of verify data from FLASH - Address 0x%04x\n\r", MemAddress);
-        break;
     }
 
-    RqBuffer[0] = MemAddress & 0xFF;
-    RqBuffer[1] = MemAddress >> 8;
-
-    // send request to TR module
+    CDCImpl* testImp = NULL;
     try {
-      PMResponse pmResponse = testImp->download(Target, RqBuffer, 2, RsBuffer, sizeof(RsBuffer), RsDataLen);
-      if ( pmResponse == PMResponse::OK ) {
-        std::cout << "Data reading OK" << std::endl;
-        // print readed data
-        printDataInHex(RsBuffer, RsDataLen);
-      }
-      else {
-        std::cout << "Data reading failed" << std::endl;
-      }
+        // crate cdc implementation object;;
+        testImp = ant_new CDCImpl(port_name.c_str());
+
+        // check the connection to GW-USB-xx device
+        bool test = testImp->test();
+        if ( test ) {
+            std::cout << "Connection test OK\n";
+        } else {
+            std::cout << "Connection test FAILED\n";
+            delete testImp;
+            return 2;
+        }
+    } catch ( CDCImplException& e ) {
+        std::cout << e.getDescr() << "\n";
+        if ( testImp != NULL )
+            delete testImp;
+        return 1;
+    }
+
+    // switch device to programming mode
+    try {
+        std::cout << "Entering programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->enterProgrammingMode();
+        if ( pteResponse == PTEResponse::OK ) {
+            std::cout << "Programming mode OK" << std::endl;
+        } else {
+            std::cout << "Programming mode ERROR" << std::endl;
+            if ( testImp != NULL )
+                delete testImp;
+            return 1;
+        }
     } catch ( CDCSendException& ex ) {
-      std::cout << ex.getDescr() << std::endl;
-      // send exception processing...
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
     } catch ( CDCReceiveException& ex ) {
-      std::cout << ex.getDescr() << std::endl;
-      // receive exception processing...
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
     }
 
-    // new line
-    std::cout << std::endl;
+    // read selected memory data from TR module in GW-USB-xx device
+    if (Target == TARGET_FLASH_R)
+        MemAddress = 0x3A00;    // start address for FLASH
+    else
+        MemAddress = 0x0000;    // start address for internal / external EEPROM
 
-    // address for next memory block
-    MemAddress += 32;
-  }
+    CntEnd = 8;
+    if (Target == TARGET_EEPROM_R)
+        CntEnd = 6;
 
-  // switch device to normal mode
-  try {
-    std::cout << "Terminating programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->terminateProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode termination OK" << std::endl;
+    for (Cnt = 0; Cnt < CntEnd; Cnt++) {
+        switch (Target) {
+        case TARGET_EEPROM_R:
+            printf("Reading 32 bytes of data from internal EEPROM - Address 0x%04x\n\r", MemAddress);
+            break;
+
+        case TARGET_EEEPROM_R:
+            printf("Reading 32 bytes of data from external EEPROM - Address 0x%04x\n\r", MemAddress);
+            break;
+
+        case TARGET_FLASH_R:
+            printf("Reading 32 bytes of verify data from FLASH - Address 0x%04x\n\r", MemAddress);
+            break;
+        }
+
+        RqBuffer[0] = MemAddress & 0xFF;
+        RqBuffer[1] = MemAddress >> 8;
+
+        // send request to TR module
+        try {
+            PMResponse pmResponse = testImp->download(Target, RqBuffer, 2, RsBuffer, sizeof(RsBuffer), RsDataLen);
+            if ( pmResponse == PMResponse::OK ) {
+                std::cout << "Data reading OK" << std::endl;
+                // print readed data
+                printDataInHex(RsBuffer, RsDataLen);
+            } else {
+                std::cout << "Data reading failed" << std::endl;
+            }
+        } catch ( CDCSendException& ex ) {
+            std::cout << ex.getDescr() << std::endl;
+            // send exception processing...
+        } catch ( CDCReceiveException& ex ) {
+            std::cout << ex.getDescr() << std::endl;
+            // receive exception processing...
+        }
+
+        // new line
+        std::cout << std::endl;
+
+        // address for next memory block
+        MemAddress += 32;
     }
-    else {
-      std::cout << "Programming mode termination ERROR" << std::endl;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
 
-  delete testImp;
-  return 0;
+    // switch device to normal mode
+    try {
+        std::cout << "Terminating programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->terminateProgrammingMode();
+        if ( pteResponse == PTEResponse::OK )
+            std::cout << "Programming mode termination OK" << std::endl;
+        else
+            std::cout << "Programming mode termination ERROR" << std::endl;
+    } catch ( CDCSendException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
+    } catch ( CDCReceiveException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
+    }
+
+    delete testImp;
+    return 0;
 }

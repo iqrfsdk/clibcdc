@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 MICRORISC s.r.o.
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
  * USB device & TR module identification reading example
  *
  * @author      Dusan Machut
- * @version     1.0.0
- * @date        06.10.2018
+ * @version     1.0.1
+ * @date        16.12.2018
  */
 
 #include <CDCImpl.h>
@@ -43,19 +43,17 @@ void printUSBDeviceData(DeviceInfo *usbDeviceInfo);
  * @param [in,out]  data    Pointer to data buffer.
  * @param           length  The length of the data.
  */
-void printDataInHex(unsigned char* data, unsigned int length) {
+void printDataInHex(unsigned char* data, unsigned int length)
+{
     for ( int i = 0; i < length; i++ ) {
-        if (*data < 0x10){
+        if (*data < 0x10)
             std::cout << "0x0" << std::hex << (int)*data;
-        }
-        else {
+        else
             std::cout << "0x" << std::hex << (int)*data;
-        }
 
         data++;
-        if ( i != (length - 1) ) {
+        if ( i != (length - 1) )
             std::cout << " ";
-        }
     }
     std::cout << std::dec << std::endl;
 }
@@ -124,20 +122,39 @@ void printTrModuleData(ModuleInfo *trModuleInfo)
     tempString[tempStringPtr++] = '5';
 
     switch(moduleType) {
-        case TR_52D: tempString[tempStringPtr++] = '2'; break;
-        case TR_58D_RJ: tempString[tempStringPtr++] = '8'; break;
-        case TR_72D: tempString[tempStringPtr-1] = '7'; tempString[tempStringPtr++] = '2'; break;
-        case TR_53D: tempString[tempStringPtr++] = '3'; break;
-        case TR_54D: tempString[tempStringPtr++] = '4'; break;
-        case TR_55D: tempString[tempStringPtr++] = '5'; break;
-        case TR_56D: tempString[tempStringPtr++] = '6'; break;
-        case TR_76D: tempString[tempStringPtr-1] = '7'; tempString[tempStringPtr++] = '6'; break;
-        default : tempString[tempStringPtr++] = 'x'; break;
+    case TR_52D:
+        tempString[tempStringPtr++] = '2';
+        break;
+    case TR_58D_RJ:
+        tempString[tempStringPtr++] = '8';
+        break;
+    case TR_72D:
+        tempString[tempStringPtr-1] = '7';
+        tempString[tempStringPtr++] = '2';
+        break;
+    case TR_53D:
+        tempString[tempStringPtr++] = '3';
+        break;
+    case TR_54D:
+        tempString[tempStringPtr++] = '4';
+        break;
+    case TR_55D:
+        tempString[tempStringPtr++] = '5';
+        break;
+    case TR_56D:
+        tempString[tempStringPtr++] = '6';
+        break;
+    case TR_76D:
+        tempString[tempStringPtr-1] = '7';
+        tempString[tempStringPtr++] = '6';
+        break;
+    default :
+        tempString[tempStringPtr++] = 'x';
+        break;
     }
 
-    if(mcuType == PIC16LF1938) {
+    if(mcuType == PIC16LF1938)
         tempString[tempStringPtr++]='D';
-    }
     tempString[tempStringPtr++]='x';
     tempString[tempStringPtr++] = 0;
     std::cout << "Module type:       " << tempString << std::endl;
@@ -145,11 +162,21 @@ void printTrModuleData(ModuleInfo *trModuleInfo)
     // print module MCU
     std::cout << "Module MCU:        ";
     switch (mcuType) {
-        case PIC16LF819: std::cout << "PIC16LF819" << std::endl; break;
-        case PIC16LF88: std::cout << "PIC16LF88" << std::endl; break;
-        case PIC16F886: std::cout << "PIC16F886" << std::endl; break;
-        case PIC16LF1938: std::cout << "PIC16LF1938" << std::endl; break;
-        default: std::cout << "UNKNOWN" << std::endl; break;
+    case PIC16LF819:
+        std::cout << "PIC16LF819" << std::endl;
+        break;
+    case PIC16LF88:
+        std::cout << "PIC16LF88" << std::endl;
+        break;
+    case PIC16F886:
+        std::cout << "PIC16F886" << std::endl;
+        break;
+    case PIC16LF1938:
+        std::cout << "PIC16LF1938" << std::endl;
+        break;
+    default:
+        std::cout << "UNKNOWN" << std::endl;
+        break;
     }
 
     // print module MCU
@@ -162,22 +189,18 @@ void printTrModuleData(ModuleInfo *trModuleInfo)
 
     // print module FCC certification
     sprintf(tempString, "FCC certification: ");
-    if (fccCerificate == FCC_CERTIFIED) {
+    if (fccCerificate == FCC_CERTIFIED)
         strcat(tempString, "YES");
-    }
-    else {
+    else
         strcat(tempString, "NO");
-    }
     std::cout << tempString << std::endl;
 
     // of OS version is 4.03 and more, print IBK
     std::cout << "IBK:               ";
-    if ((osVersionMajor > 4) || (osVersionMajor == 4 && osVersionMinor >= 3)) {
+    if ((osVersionMajor > 4) || (osVersionMajor == 4 && osVersionMinor >= 3))
         printDataInHex((uint8_t *)&trModuleInfo->ibk[0], 16);
-    }
-    else {
+    else
         std::cout << "---";
-    }
 
     std::cout << std::endl;
 }
@@ -195,25 +218,22 @@ void printUSBDeviceData(DeviceInfo *usbDeviceInfo)
     std::cout << "---------------------" << std::endl;
 
     // print USB device type
-    if (usbDeviceInfo->typeLen >= sizeof(tempString)) {
+    if (usbDeviceInfo->typeLen >= sizeof(tempString))
         usbDeviceInfo->typeLen = sizeof(tempString) - 1;
-    }
     memcpy(tempString, usbDeviceInfo->type, usbDeviceInfo->typeLen);
     tempString[usbDeviceInfo->typeLen] = 0;
     std::cout << "USB device type:     " << tempString << std::endl;
 
     // print USB device FW version
-    if (usbDeviceInfo->fwLen >= sizeof(tempString)) {
+    if (usbDeviceInfo->fwLen >= sizeof(tempString))
         usbDeviceInfo->fwLen = sizeof(tempString) - 1;
-    }
     memcpy(tempString, usbDeviceInfo->firmwareVersion, usbDeviceInfo->fwLen);
     tempString[usbDeviceInfo->fwLen] = 0;
     std::cout << "USB device firmware: " << tempString << std::endl;
 
     // print USB device serial number
-    if (usbDeviceInfo->snLen >= sizeof(tempString)) {
+    if (usbDeviceInfo->snLen >= sizeof(tempString))
         usbDeviceInfo->snLen = sizeof(tempString) - 1;
-    }
     memcpy(tempString, usbDeviceInfo->serialNumber, usbDeviceInfo->snLen);
     tempString[usbDeviceInfo->snLen] = 0;
     std::cout << "USB device SN:       " << tempString << std::endl;
@@ -240,8 +260,7 @@ int main(int argc, char** argv)
         std::cerr << "  ReadTrIdfExample COM5" << std::endl;
         std::cerr << "  ReadTrIdfExample /dev/ttyACM0" << std::endl;
         return (-1);
-    }
-    else {
+    } else {
         port_name = argv[1];
     }
 
@@ -261,9 +280,8 @@ int main(int argc, char** argv)
         }
     } catch ( CDCImplException& e ) {
         std::cout << e.getDescr() << std::endl;
-        if ( testImp != NULL ) {
+        if ( testImp != NULL )
             delete testImp;
-        }
         return 1;
     }
     std::cout << std::endl;
@@ -275,8 +293,7 @@ int main(int argc, char** argv)
             std::cout << "USB device reading OK" << std::endl;
             // print Identification data
             printUSBDeviceData(MyDeviceInfoData);
-        }
-        else {
+        } else {
             std::cout << "USB device reading failed" << std::endl;
         }
     } catch ( CDCSendException& ex ) {
@@ -294,8 +311,7 @@ int main(int argc, char** argv)
             std::cout << "TR module reading OK" << std::endl;
             // print Identification data
             printTrModuleData(MyModuleInfoData);
-        }
-        else {
+        } else {
             std::cout << "TR module reading failed" << std::endl;
         }
     } catch ( CDCSendException& ex ) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 MICRORISC s.r.o.
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * TR module programming example (*.hex file)
  *
  * @author      Dusan Machut
- * @version     1.0.0
+ * @version     1.0.1
  * @date        12.5.2018
  */
 
@@ -113,40 +113,35 @@ void printDataInHex(unsigned char* data, unsigned int length) {
     for ( int i = 0; i < length; i++ ) {
         std::cout << "0x" << std::hex << (int)*data;
         data++;
-        if ( i != (length - 1) ) {
+        if ( i != (length - 1) )
             std::cout << " ";
-        }
     }
     std::cout << std::dec << "\n";
 }
 
 /**
- * Convetr two ASCII chars tu number
+ * Convert two ASCII chars to number
  * @param dataByteHi High nibble in ASCII
  * @param dataByteLo Low nibble in ASCII
  * @return Number
  */
 uint8_t iqrfPgmConvertToNum(uint8_t dataByteHi, uint8_t dataByteLo)
 {
-  uint8_t result = 0;
+    uint8_t result = 0;
 
-  /* convert High nibble */
-  if (dataByteHi >= '0' && dataByteHi <= '9') {
-    result = (dataByteHi - '0') << 4;
-  }
-  else if (dataByteHi >= 'a' && dataByteHi <= 'f') {
-    result = (dataByteHi - 87) << 4;
-  }
+    /* convert High nibble */
+    if (dataByteHi >= '0' && dataByteHi <= '9')
+        result = (dataByteHi - '0') << 4;
+    else if (dataByteHi >= 'a' && dataByteHi <= 'f')
+        result = (dataByteHi - 87) << 4;
 
-  /* convert Low nibble */
-  if (dataByteLo >= '0' && dataByteLo <= '9') {
-    result |= (dataByteLo - '0');
-  }
-  else if (dataByteLo >= 'a' && dataByteLo <= 'f') {
-    result |= (dataByteLo - 87);
-  }
+    /* convert Low nibble */
+    if (dataByteLo >= '0' && dataByteLo <= '9')
+        result |= (dataByteLo - '0');
+    else if (dataByteLo >= 'a' && dataByteLo <= 'f')
+        result |= (dataByteLo - 87);
 
-  return(result);
+    return(result);
 }
 
 /**
@@ -155,13 +150,14 @@ uint8_t iqrfPgmConvertToNum(uint8_t dataByteHi, uint8_t dataByteLo)
  */
 char iqrfReadByteFromFile(void)
 {
-  int ReadChar;
+    int ReadChar;
 
-  ReadChar = fgetc( file );
+    ReadChar = fgetc( file );
 
-  if (ReadChar == EOF) return 0;
+    if (ReadChar == EOF)
+        return 0;
 
-  return ReadChar;
+    return ReadChar;
 }
 
 /**
@@ -170,42 +166,41 @@ char iqrfReadByteFromFile(void)
  */
 uint8_t iqrfPgmReadHEXFileLine(void)
 {
-  uint8_t Sign;
-  uint8_t DataByteHi, DataByteLo;
-  uint8_t DataByte;
-  uint8_t CodeLineBufferPtr = 0;
-  uint8_t CodeLineBufferCrc = 0;
+    uint8_t Sign;
+    uint8_t DataByteHi, DataByteLo;
+    uint8_t DataByte;
+    uint8_t CodeLineBufferPtr = 0;
+    uint8_t CodeLineBufferCrc = 0;
 
-  // find start of line or end of file
-  while (((Sign = iqrfReadByteFromFile()) != 0) && (Sign != ':'));
-  // if end of file
-  if (Sign == 0) {
-    return(IQRF_PGM_END_OF_FILE);
-  }
+    // find start of line or end of file
+    while (((Sign = iqrfReadByteFromFile()) != 0) && (Sign != ':'))
+        ;  /* void */
+    // if end of file
+    if (Sign == 0)
+        return(IQRF_PGM_END_OF_FILE);
 
-  // read data to end of line and convert if to numbers
-  for (;;) {
-    // read High nibble
-    DataByteHi = tolower(iqrfReadByteFromFile());
-    // check end of line
-    if (DataByteHi == 0x0A || DataByteHi == 0x0D) {
-      if (CodeLineBufferCrc != 0) {
-        // check line CRC
-        return(IQRF_PGM_FILE_DATA_ERROR);
-      }
-      // stop reading
-      return(IQRF_PGM_FILE_DATA_READY);
+    // read data to end of line and convert if to numbers
+    for (;;) {
+        // read High nibble
+        DataByteHi = tolower(iqrfReadByteFromFile());
+        // check end of line
+        if (DataByteHi == 0x0A || DataByteHi == 0x0D) {
+            if (CodeLineBufferCrc != 0)
+                return(IQRF_PGM_FILE_DATA_ERROR); // check line CRC
+            // stop reading
+            return(IQRF_PGM_FILE_DATA_READY);
+        }
+        // read Low nibble
+        DataByteLo = tolower(iqrfReadByteFromFile());
+        // convert two ascii to number
+        DataByte = iqrfPgmConvertToNum(DataByteHi, DataByteLo);
+        // add to Crc
+        CodeLineBufferCrc += DataByte;
+        // store to line buffer
+        IqrfPgmCodeLineBuffer[CodeLineBufferPtr++] = DataByte;
+        if (CodeLineBufferPtr >= SIZE_OF_CODE_LINE_BUFFER)
+            return (IQRF_PGM_FILE_DATA_ERROR);
     }
-    // read Low nibble
-    DataByteLo = tolower(iqrfReadByteFromFile());
-    // convert two ascii to number
-    DataByte = iqrfPgmConvertToNum(DataByteHi, DataByteLo);
-    // add to Crc
-    CodeLineBufferCrc += DataByte;
-    // store to line buffer
-    IqrfPgmCodeLineBuffer[CodeLineBufferPtr++] = DataByte;
-    if (CodeLineBufferPtr >= SIZE_OF_CODE_LINE_BUFFER) return (IQRF_PGM_FILE_DATA_ERROR);
-  }
 }
 
 /**
@@ -213,22 +208,22 @@ uint8_t iqrfPgmReadHEXFileLine(void)
  */
 void iqrfPgmMoveOverflowedData(void)
 {
-  uint16_t MemBlock;
-  // move overflowed data to active block
-  memcpy((uint8_t *)&PrepareMemBlock.MemoryBlock[34], (uint8_t *)&PrepareMemBlock.MemoryBlock[0], 34);
-  // clear block of memory for overfloved data
-  memset((uint8_t *)&PrepareMemBlock.MemoryBlock[0], 0, 34);
-  // calculate the data block index
-  MemBlock = ((uint16_t)PrepareMemBlock.MemoryBlock[35] << 8) | PrepareMemBlock.MemoryBlock[34];
-  MemBlock /= 32;
-  PrepareMemBlock.MemoryBlockNumber = MemBlock + 0x10;
-  MemBlock++;
-  MemBlock *= 32;
-  PrepareMemBlock.MemoryBlock[0] = MemBlock & 0x00FF;         // write next block address to image
-  PrepareMemBlock.MemoryBlock[1] = MemBlock >> 8;
-  PrepareMemBlock.DataOverflow = 0;
-  // initialize block process counter (block will be written to TR module in 1 write packet)
-  PrepareMemBlock.MemoryBlockProcessState = 1;
+    uint16_t MemBlock;
+    // move overflowed data to active block
+    memcpy((uint8_t *)&PrepareMemBlock.MemoryBlock[34], (uint8_t *)&PrepareMemBlock.MemoryBlock[0], 34);
+    // clear block of memory for overfloved data
+    memset((uint8_t *)&PrepareMemBlock.MemoryBlock[0], 0, 34);
+    // calculate the data block index
+    MemBlock = ((uint16_t)PrepareMemBlock.MemoryBlock[35] << 8) | PrepareMemBlock.MemoryBlock[34];
+    MemBlock /= 32;
+    PrepareMemBlock.MemoryBlockNumber = MemBlock + 0x10;
+    MemBlock++;
+    MemBlock *= 32;
+    PrepareMemBlock.MemoryBlock[0] = MemBlock & 0x00FF;         // write next block address to image
+    PrepareMemBlock.MemoryBlock[1] = MemBlock >> 8;
+    PrepareMemBlock.DataOverflow = 0;
+    // initialize block process counter (block will be written to TR module in 1 write packet)
+    PrepareMemBlock.MemoryBlockProcessState = 1;
 }
 
 /**
@@ -238,192 +233,211 @@ void iqrfPgmMoveOverflowedData(void)
  */
 uint8_t iqrfPgmPrepareMemBlock(void)
 {
-  uint16_t MemBlock;
-  uint8_t DataCounter;
-  uint8_t DestinationIndex;
-  uint8_t ValidAddress;
-  uint8_t OperationResult;
-  uint8_t Cnt;
+    uint16_t MemBlock;
+    uint8_t DataCounter;
+    uint8_t DestinationIndex;
+    uint8_t ValidAddress;
+    uint8_t OperationResult;
+    uint8_t Cnt;
 
-  // initialize memory block for flash programming
-  if (!PrepareMemBlock.DataOverflow) {
-    for (Cnt=0; Cnt<sizeof(PrepareMemBlock.MemoryBlock); Cnt+=2) {
-      PrepareMemBlock.MemoryBlock[Cnt] = 0xFF;
-      PrepareMemBlock.MemoryBlock[Cnt+1] = 0x3F;
+    // initialize memory block for flash programming
+    if (!PrepareMemBlock.DataOverflow) {
+        for (Cnt=0; Cnt<sizeof(PrepareMemBlock.MemoryBlock); Cnt+=2) {
+            PrepareMemBlock.MemoryBlock[Cnt] = 0xFF;
+            PrepareMemBlock.MemoryBlock[Cnt+1] = 0x3F;
+        }
     }
-  }
-  PrepareMemBlock.MemoryBlockNumber = 0;
+    PrepareMemBlock.MemoryBlockNumber = 0;
 
-  while(1) {
-    // if no data ready in file buffer
-    if (!PrepareMemBlock.DataInBufferReady) {
-      OperationResult = iqrfPgmReadHEXFileLine();       // read one line from HEX file
-      // check result of file reading operation
-      if (OperationResult == IQRF_PGM_FILE_DATA_ERROR)  return(IQRF_PGM_ERROR);
-      else {
-        if (OperationResult == IQRF_PGM_END_OF_FILE) {
-          // if any data are ready to programm to FLASH
-          if (PrepareMemBlock.MemoryBlockNumber){
-            if (PrepareMemBlock.MemoryBlockNumber < 80) return(IQRF_PGM_EEEPROM_BLOCK_READY);
-            else return(IQRF_PGM_FLASH_BLOCK_READY);
-          }
-          else {
-            if (PrepareMemBlock.DataOverflow) {
-              iqrfPgmMoveOverflowedData();
-              return(IQRF_PGM_EEEPROM_BLOCK_READY);
+    while(1) {
+        // if no data ready in file buffer
+        if (!PrepareMemBlock.DataInBufferReady) {
+            OperationResult = iqrfPgmReadHEXFileLine();       // read one line from HEX file
+            // check result of file reading operation
+            if (OperationResult == IQRF_PGM_FILE_DATA_ERROR) {
+                  return(IQRF_PGM_ERROR);
+            } else {
+                if (OperationResult == IQRF_PGM_END_OF_FILE) {
+                    // if any data are ready to programm to FLASH
+                    if (PrepareMemBlock.MemoryBlockNumber) {
+                        if (PrepareMemBlock.MemoryBlockNumber < 80)
+                            return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                        else
+                            return(IQRF_PGM_FLASH_BLOCK_READY);
+                    } else {
+                        if (PrepareMemBlock.DataOverflow) {
+                            iqrfPgmMoveOverflowedData();
+                            return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                        } else {
+                            return(IQRF_PGM_SUCCESS);
+                        }
+                    }
+                }
             }
-            else return(IQRF_PGM_SUCCESS);
-          }
+            PrepareMemBlock.DataInBufferReady = 1;            // set flag, data ready in file buffer
         }
-      }
-      PrepareMemBlock.DataInBufferReady = 1;            // set flag, data ready in file buffer
+
+        if (IqrfPgmCodeLineBuffer[3] == 0) {                // data block ready in file buffer
+            // read destination address for data in buffer
+            PrepareMemBlock.Address = (PrepareMemBlock.HiAddress
+                + ((uint16_t)IqrfPgmCodeLineBuffer[1] << 8)
+                + IqrfPgmCodeLineBuffer[2]) / 2;
+            if (PrepareMemBlock.DataOverflow)
+                iqrfPgmMoveOverflowedData();
+            // data for external serial EEPROM
+            if (PrepareMemBlock.Address >= SERIAL_EEPROM_MIN_ADR
+                && PrepareMemBlock.Address <= SERIAL_EEPROM_MAX_ADR)
+            {
+                // if image of data block is not initialized
+                if (PrepareMemBlock.MemoryBlockNumber == 0) {
+                    MemBlock = (PrepareMemBlock.Address - 0x200) / 32;          // calculate modulo 32 Address
+                    MemBlock *= 32;
+                    memset((uint8_t *)&PrepareMemBlock.MemoryBlock[0], 0, 68);  // clear image of data block
+                    PrepareMemBlock.MemoryBlock[34] = MemBlock & 0x00FF;        // write block address to image
+                    PrepareMemBlock.MemoryBlock[35] = MemBlock >> 8;
+                    MemBlock += 0x20;                                           // next block address
+                    PrepareMemBlock.MemoryBlock[0] = MemBlock & 0x00FF;         // write next block address to image
+                    PrepareMemBlock.MemoryBlock[1] = MemBlock >> 8;
+                    PrepareMemBlock.MemoryBlockNumber = PrepareMemBlock.Address / 32;   // remember actual memory block
+                    // initialize block process counter (block will be written to TR module in 1 write packet)
+                    PrepareMemBlock.MemoryBlockProcessState = 1;
+                }
+
+                MemBlock = PrepareMemBlock.Address / 32;                        // calculate actual memory block
+                // calculate offset from start of image, where data to be written
+                DestinationIndex = (PrepareMemBlock.Address % 32) + 36;
+                DataCounter = IqrfPgmCodeLineBuffer[0] / 2;                     // read number of data bytes in file buffer
+
+                // if data in file buffer are from different memory block, write actual image to TR module
+                if (PrepareMemBlock.MemoryBlockNumber != MemBlock) {
+                    if (PrepareMemBlock.MemoryBlockNumber < 80)
+                        return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                    else
+                        return(IQRF_PGM_FLASH_BLOCK_READY);
+                }
+
+                // check if all data are inside the image of data block
+                if (DestinationIndex + DataCounter > sizeof(PrepareMemBlock.MemoryBlock))
+                    PrepareMemBlock.DataOverflow = 1;
+                // copy data from file buffer to image of data block
+                for (Cnt=0; Cnt < DataCounter; Cnt++) {
+                    PrepareMemBlock.MemoryBlock[DestinationIndex++] = IqrfPgmCodeLineBuffer[2*Cnt+4];
+                    if (DestinationIndex == 68)
+                        DestinationIndex = 2;
+                }
+                // if all data are not inside the image of data block
+                if (PrepareMemBlock.DataOverflow) {
+                    PrepareMemBlock.DataInBufferReady = 0;                      // process next line from HEX file
+                    return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                }
+            } else {  // check if data in file buffer are for other memory areas
+                MemBlock = PrepareMemBlock.Address / 32;                        // calculate actual memory block
+                // calculate offset from start of image, where data to be written
+                DestinationIndex = (PrepareMemBlock.Address % 32) * 2;
+                if (DestinationIndex < 32)
+                    DestinationIndex += 2;
+                else
+                    DestinationIndex += 4;
+                DataCounter = IqrfPgmCodeLineBuffer[0];                         // read number of data bytes in file buffer
+                ValidAddress = 0;
+
+                // check if data in file buffer are for main FLASH memory area in TR module
+                if (PrepareMemBlock.Address >= IQRF_MAIN_MEM_MIN_ADR
+                    && PrepareMemBlock.Address <= IQRF_MAIN_MEM_MAX_ADR)
+                {
+                    ValidAddress = 1;                                           // set flag, data are for FLASH memory area
+                    // check if all data are in main memory area
+                    if ((PrepareMemBlock.Address + DataCounter/2) > IQRF_MAIN_MEM_MAX_ADR)
+                        DataCounter = (IQRF_MAIN_MEM_MAX_ADR - PrepareMemBlock.Address) * 2;
+                    // check if all data are inside the image of data block
+                    if (DestinationIndex + DataCounter > sizeof(PrepareMemBlock.MemoryBlock))
+                        return(IQRF_PGM_ERROR);
+                    // if data in file buffer are from different memory block, write actual image to TR module
+                    if (PrepareMemBlock.MemoryBlockNumber) {
+                        if (PrepareMemBlock.MemoryBlockNumber != MemBlock) {
+                            if (PrepareMemBlock.MemoryBlockNumber < 80)
+                                return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                            else
+                                return(IQRF_PGM_FLASH_BLOCK_READY);
+                        }
+                    }
+                } else {
+                    // check if data in file buffer are for licenced FLASH memory area in TR module
+                    if (PrepareMemBlock.Address >= IQRF_LICENCED_MEM_MIN_ADR
+                        && PrepareMemBlock.Address <= IQRF_LICENCED_MEM_MAX_ADR)
+                    {
+                        ValidAddress = 1;                                       // set flag, data are for FLASH memory area
+                        // check if all data are in licenced memory area
+                        if ((PrepareMemBlock.Address + DataCounter/2) > IQRF_LICENCED_MEM_MAX_ADR)
+                            DataCounter = (IQRF_LICENCED_MEM_MAX_ADR - PrepareMemBlock.Address) * 2;
+                        // check if all data are inside the image of data block
+                        if (DestinationIndex + DataCounter > sizeof(PrepareMemBlock.MemoryBlock))
+                            return(IQRF_PGM_ERROR);
+                        // if data in file buffer are from different memory block, write actual image to TR module
+                        if (PrepareMemBlock.MemoryBlockNumber) {
+                            if (PrepareMemBlock.MemoryBlockNumber != MemBlock) {
+                                if (PrepareMemBlock.MemoryBlockNumber < 80)
+                                    return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                                else
+                                    return(IQRF_PGM_FLASH_BLOCK_READY);
+                            }
+                        }
+                    } else {
+                        // check if data in file buffer are for internal EEPROM of TR module
+                        if (PrepareMemBlock.Address >= PIC16LF1938_EEPROM_MIN
+                            && PrepareMemBlock.Address <= PIC16LF1938_EEPROM_MAX)
+                        {
+                            // if image of data block contains any data, write it to TR module
+                            if (PrepareMemBlock.MemoryBlockNumber) {
+                                if (PrepareMemBlock.MemoryBlockNumber < 80)
+                                    return(IQRF_PGM_EEEPROM_BLOCK_READY);
+                                else
+                                    return(IQRF_PGM_FLASH_BLOCK_READY);
+                            }
+                            // prepare image of data block for internal EEPROM
+                            PrepareMemBlock.MemoryBlock[0] = PrepareMemBlock.Address & 0x00FF;
+                            PrepareMemBlock.MemoryBlock[1] = DataCounter / 2;
+                            if (PrepareMemBlock.Address + PrepareMemBlock.MemoryBlock[1] > PIC16LF1938_EEPROM_MAX
+                                || PrepareMemBlock.MemoryBlock[1] > 32)
+                            {
+                                return(IQRF_PGM_ERROR);
+                            }
+                            for (uint8_t Cnt=0; Cnt < PrepareMemBlock.MemoryBlock[1]; Cnt++)
+                                PrepareMemBlock.MemoryBlock[Cnt+2] = IqrfPgmCodeLineBuffer[2*Cnt+4];
+
+                            PrepareMemBlock.DataInBufferReady = 0;
+                            // initialize block process counter (block will be written to TR module in 1 write packet)
+                            PrepareMemBlock.MemoryBlockProcessState = 1;
+                            return(IQRF_PGM_EEPROM_BLOCK_READY);
+                        }
+                    }
+                }
+
+                // if destination address is from FLASH memory area
+                if (ValidAddress) {
+                    // remember actual memory block
+                    PrepareMemBlock.MemoryBlockNumber = MemBlock;
+                    // initialize block process counter (block will be written to TR module in 2 write packets)
+                    PrepareMemBlock.MemoryBlockProcessState = 2;
+                    // compute and write destination address of first half of image
+                    MemBlock *= 32;
+                    PrepareMemBlock.MemoryBlock[0] = MemBlock & 0x00FF;
+                    PrepareMemBlock.MemoryBlock[1] = MemBlock >> 8;
+                    // compute and write destination address of second half of image
+                    MemBlock += 0x0010;
+                    PrepareMemBlock.MemoryBlock[34] = MemBlock & 0x00FF;
+                    PrepareMemBlock.MemoryBlock[35] = MemBlock >> 8;
+                    // copy data from file buffer to image of data block
+                    memcpy(&PrepareMemBlock.MemoryBlock[DestinationIndex], &IqrfPgmCodeLineBuffer[4], DataCounter);
+                }
+            }
+        } else {
+            if (IqrfPgmCodeLineBuffer[3] == 4)                                 // in file buffer is address info
+                PrepareMemBlock.HiAddress = ((uint32_t)IqrfPgmCodeLineBuffer[4] << 24)
+                    + ((uint32_t)IqrfPgmCodeLineBuffer[5] << 16);
+        }
+        PrepareMemBlock.DataInBufferReady = 0;                                 // process next line from HEX file
     }
-
-    if (IqrfPgmCodeLineBuffer[3] == 0) {                // data block ready in file buffer
-      // read destination address for data in buffer
-      PrepareMemBlock.Address = (PrepareMemBlock.HiAddress + ((uint16_t)IqrfPgmCodeLineBuffer[1] << 8) + IqrfPgmCodeLineBuffer[2]) / 2;
-      if (PrepareMemBlock.DataOverflow) iqrfPgmMoveOverflowedData();
-      // data for external serial EEPROM
-      if (PrepareMemBlock.Address >= SERIAL_EEPROM_MIN_ADR && PrepareMemBlock.Address <= SERIAL_EEPROM_MAX_ADR) {
-        // if image of data block is not initialized
-        if (PrepareMemBlock.MemoryBlockNumber == 0) {
-          MemBlock = (PrepareMemBlock.Address - 0x200) / 32;          // calculate modulo 32 Address
-          MemBlock *= 32;
-          memset((uint8_t *)&PrepareMemBlock.MemoryBlock[0], 0, 68);  // clear image of data block
-          PrepareMemBlock.MemoryBlock[34] = MemBlock & 0x00FF;        // write block address to image
-          PrepareMemBlock.MemoryBlock[35] = MemBlock >> 8;
-          MemBlock += 0x20;                                           // naxt block address
-          PrepareMemBlock.MemoryBlock[0] = MemBlock & 0x00FF;         // write next block address to image
-          PrepareMemBlock.MemoryBlock[1] = MemBlock >> 8;
-          PrepareMemBlock.MemoryBlockNumber = PrepareMemBlock.Address / 32;   // remember actual memory block
-          // initialize block process counter (block will be written to TR module in 1 write packet)
-          PrepareMemBlock.MemoryBlockProcessState = 1;
-        }
-
-        MemBlock = PrepareMemBlock.Address / 32;                        // calculate actual memory block
-        // calculate offset from start of image, where data to be written
-        DestinationIndex = (PrepareMemBlock.Address % 32) + 36;
-        DataCounter = IqrfPgmCodeLineBuffer[0] / 2;                     // read number of data bytes in file buffer
-
-        // if data in file buffer are from different memory block, write actual image to TR module
-        if (PrepareMemBlock.MemoryBlockNumber != MemBlock) {
-          if (PrepareMemBlock.MemoryBlockNumber < 80) return(IQRF_PGM_EEEPROM_BLOCK_READY);
-          else return(IQRF_PGM_FLASH_BLOCK_READY);
-        }
-
-        // check if all data are inside the image of data block
-        if (DestinationIndex + DataCounter > sizeof(PrepareMemBlock.MemoryBlock)) {
-          PrepareMemBlock.DataOverflow = 1;
-        }
-        // copy data from file buffer to image of data block
-        for (Cnt=0; Cnt < DataCounter; Cnt++){
-          PrepareMemBlock.MemoryBlock[DestinationIndex++] = IqrfPgmCodeLineBuffer[2*Cnt+4];
-          if (DestinationIndex == 68) DestinationIndex = 2;
-        }
-        // if all data are not inside the image of data block
-        if (PrepareMemBlock.DataOverflow) {
-          PrepareMemBlock.DataInBufferReady = 0;                      // process next line from HEX file
-          return(IQRF_PGM_EEEPROM_BLOCK_READY);
-        }
-      }
-      else{  // check if data in file buffer are for other memory areas
-        MemBlock = PrepareMemBlock.Address / 32;                        // calculate actual memory block
-        // calculate offset from start of image, where data to be written
-        DestinationIndex = (PrepareMemBlock.Address % 32) * 2;
-        if (DestinationIndex < 32) DestinationIndex += 2;
-        else DestinationIndex += 4;
-        DataCounter = IqrfPgmCodeLineBuffer[0];                         // read number of data bytes in file buffer
-        ValidAddress = 0;
-
-        // check if data in file buffer are for main FLASH memory area in TR module
-        if (PrepareMemBlock.Address >= IQRF_MAIN_MEM_MIN_ADR && PrepareMemBlock.Address <= IQRF_MAIN_MEM_MAX_ADR) {
-          ValidAddress = 1;                                           // set flag, data are for FLASH memory area
-          // check if all data are in main memory area
-          if ((PrepareMemBlock.Address + DataCounter/2) > IQRF_MAIN_MEM_MAX_ADR) {
-            DataCounter = (IQRF_MAIN_MEM_MAX_ADR - PrepareMemBlock.Address) * 2;
-          }
-          // check if all data are inside the image of data block
-          if (DestinationIndex + DataCounter > sizeof(PrepareMemBlock.MemoryBlock)) {
-            return(IQRF_PGM_ERROR);
-          }
-          // if data in file buffer are from different memory block, write actual image to TR module
-          if (PrepareMemBlock.MemoryBlockNumber) {
-            if (PrepareMemBlock.MemoryBlockNumber != MemBlock) {
-              if (PrepareMemBlock.MemoryBlockNumber < 80) return(IQRF_PGM_EEEPROM_BLOCK_READY);
-              else return(IQRF_PGM_FLASH_BLOCK_READY);
-            }
-          }
-        }
-        else{
-          // check if data in file buffer are for licenced FLASH memory area in TR module
-          if (PrepareMemBlock.Address >= IQRF_LICENCED_MEM_MIN_ADR && PrepareMemBlock.Address <= IQRF_LICENCED_MEM_MAX_ADR) {
-            ValidAddress = 1;                                       // set flag, data are for FLASH memory area
-            // check if all data are in licenced memory area
-            if ((PrepareMemBlock.Address + DataCounter/2) > IQRF_LICENCED_MEM_MAX_ADR) {
-              DataCounter = (IQRF_LICENCED_MEM_MAX_ADR - PrepareMemBlock.Address) * 2;
-            }
-            // check if all data are inside the image of data block
-            if (DestinationIndex + DataCounter > sizeof(PrepareMemBlock.MemoryBlock)) {
-              return(IQRF_PGM_ERROR);
-            }
-            // if data in file buffer are from different memory block, write actual image to TR module
-            if (PrepareMemBlock.MemoryBlockNumber) {
-              if (PrepareMemBlock.MemoryBlockNumber != MemBlock) {
-                if (PrepareMemBlock.MemoryBlockNumber < 80) return(IQRF_PGM_EEEPROM_BLOCK_READY);
-                else return(IQRF_PGM_FLASH_BLOCK_READY);
-              }
-            }
-          }
-          else{
-            // check if data in file buffer are for internal EEPROM of TR module
-            if (PrepareMemBlock.Address >= PIC16LF1938_EEPROM_MIN && PrepareMemBlock.Address <= PIC16LF1938_EEPROM_MAX) {
-              // if image of data block contains any data, write it to TR module
-              if (PrepareMemBlock.MemoryBlockNumber) {
-                if (PrepareMemBlock.MemoryBlockNumber < 80) return(IQRF_PGM_EEEPROM_BLOCK_READY);
-                else return(IQRF_PGM_FLASH_BLOCK_READY);
-              }
-              // prepare image of data block for internal EEPROM
-              PrepareMemBlock.MemoryBlock[0] = PrepareMemBlock.Address & 0x00FF;
-              PrepareMemBlock.MemoryBlock[1] = DataCounter / 2;
-              if (PrepareMemBlock.Address + PrepareMemBlock.MemoryBlock[1] > PIC16LF1938_EEPROM_MAX || PrepareMemBlock.MemoryBlock[1] > 32) {
-                return(IQRF_PGM_ERROR);
-              }
-              for (uint8_t Cnt=0; Cnt < PrepareMemBlock.MemoryBlock[1]; Cnt++) {
-                PrepareMemBlock.MemoryBlock[Cnt+2] = IqrfPgmCodeLineBuffer[2*Cnt+4];
-              }
-              PrepareMemBlock.DataInBufferReady = 0;
-              // initialize block process counter (block will be written to TR module in 1 write packet)
-              PrepareMemBlock.MemoryBlockProcessState = 1;
-              return(IQRF_PGM_EEPROM_BLOCK_READY);
-            }
-          }
-        }
-        // if destination address is from FLASH memory area
-        if (ValidAddress) {
-          // remember actual memory block
-          PrepareMemBlock.MemoryBlockNumber = MemBlock;
-          // initialize block process counter (block will be written to TR module in 2 write packets)
-          PrepareMemBlock.MemoryBlockProcessState = 2;
-          // compute and write destination address of first half of image
-          MemBlock *= 32;
-          PrepareMemBlock.MemoryBlock[0] = MemBlock & 0x00FF;
-          PrepareMemBlock.MemoryBlock[1] = MemBlock >> 8;
-          // compute and write destination address of second half of image
-          MemBlock += 0x0010;
-          PrepareMemBlock.MemoryBlock[34] = MemBlock & 0x00FF;
-          PrepareMemBlock.MemoryBlock[35] = MemBlock >> 8;
-          // copy data from file buffer to image of data block
-          memcpy(&PrepareMemBlock.MemoryBlock[DestinationIndex], &IqrfPgmCodeLineBuffer[4], DataCounter);
-        }
-      }
-    }
-    else {
-      if (IqrfPgmCodeLineBuffer[3] == 4) {                                 // in file buffer is address info
-        PrepareMemBlock.HiAddress = ((uint32_t)IqrfPgmCodeLineBuffer[4] << 24) + ((uint32_t)IqrfPgmCodeLineBuffer[5] << 16);
-      }
-    }
-    PrepareMemBlock.DataInBufferReady = 0;                                 // process next line from HEX file
-  }
 }
 
 /**
@@ -433,170 +447,161 @@ uint8_t iqrfPgmPrepareMemBlock(void)
  */
 int main(int argc, char** argv)
 {
-  int OpResult;
-  int Target;
-  int PgmRetCode;
-  int DataSize;
-  uint8_t *DataBuffer;
+    int OpResult;
+    int Target;
+    int PgmRetCode;
+    int DataSize;
+    uint8_t *DataBuffer;
 
 #if defined(WIN32) && defined(_DEBUG)
-  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-  std::string port_name;
-  // check input parameters
-  if (argc < 3) {
-    std::cerr << "Usage" << std::endl;
-    std::cerr << "  PgmHexExample <port-name> <file-name>" << std::endl << std::endl;
-    std::cerr << "Example" << std::endl;
-    std::cerr << "  PgmHexExample COM5 test.hex" << std::endl;
-    std::cerr << "  PgmHexExample /dev/ttyACM0 test.hex" << std::endl;
-    return (-1);
-  }
-  else {
-    port_name = argv[1];
-
-    // We assume argv[2] is a filename to open
-    file = fopen( argv[2], "r" );
-    // fopen returns 0, the NULL pointer, on failure
-    if ( file == 0 ) {
-      std::cout << "Could not open input file" << std::endl;
-      return (-2);
-    }
-  }
-
-  CDCImpl* testImp = NULL;
-  try {
-    // crate cdc implementation object;;
-    testImp = ant_new CDCImpl(port_name.c_str());
-
-    // check the connection to GW-USB-xx device
-    bool test = testImp->test();
-    if ( test ) {
-      std::cout << "Connection test OK\n";
+    std::string port_name;
+    // check input parameters
+    if (argc < 3) {
+        std::cerr << "Usage" << std::endl;
+        std::cerr << "  PgmHexExample <port-name> <file-name>" << std::endl << std::endl;
+        std::cerr << "Example" << std::endl;
+        std::cerr << "  PgmHexExample COM5 test.hex" << std::endl;
+        std::cerr << "  PgmHexExample /dev/ttyACM0 test.hex" << std::endl;
+        return (-1);
     } else {
-      std::cout << "Connection test FAILED\n";
-      delete testImp;
-      fclose(file);
-      return 2;
-    }
-  } catch ( CDCImplException& e ) {
-    std::cout << e.getDescr() << "\n";
-    if ( testImp != NULL ) {
-      delete testImp;
-    }
-    fclose(file);
-    return 1;
-  }
+        port_name = argv[1];
 
-  // switch device to programming mode
-  try {
-    std::cout << "Entering programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->enterProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode OK" << std::endl;
-    }
-    else {
-      std::cout << "Programming mode ERROR" << std::endl;
-      if ( testImp != NULL ) {
-        delete testImp;
-      }
-      fclose(file);
-      return 1;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
-
-  // read data from input file and write it to TR module in GW-USB-xx device
-  while (1) {
-    // prepare data to write
-    OpResult = iqrfPgmPrepareMemBlock();
-    // check result of data preparing
-    if (OpResult != IQRF_PGM_FLASH_BLOCK_READY && OpResult != IQRF_PGM_EEEPROM_BLOCK_READY && OpResult != IQRF_PGM_EEPROM_BLOCK_READY) {
-      break;  // end programming
-    }
-    // write prepared data to TR module
-    while (PrepareMemBlock.MemoryBlockProcessState) {
-
-      switch (OpResult){
-        case IQRF_PGM_FLASH_BLOCK_READY:{
-          Target = TARGET_FLASH_W;
-          if (PrepareMemBlock.MemoryBlockProcessState == 2) {
-            DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[0];
-            DataSize = 32 + 2;
-          }
-          else {
-            DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[34];
-            DataSize = 32 + 2;
-          }
+        // We assume argv[2] is a filename to open
+        file = fopen( argv[2], "r" );
+        // fopen returns 0, the NULL pointer, on failure
+        if ( file == 0 ) {
+            std::cout << "Could not open input file" << std::endl;
+            return (-2);
         }
-        break;
+    }
 
-        case IQRF_PGM_EEEPROM_BLOCK_READY:{
-          Target = TARGET_EEEPROM_W;
-          DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[34];
-          DataSize = 32 + 2;
-        }
-        break;
+    CDCImpl* testImp = NULL;
+    try {
+        // crate cdc implementation object;;
+        testImp = ant_new CDCImpl(port_name.c_str());
 
-        case IQRF_PGM_EEPROM_BLOCK_READY:{
-          Target = TARGET_EEPROM_W;
-          DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[0];
-          DataSize = PrepareMemBlock.MemoryBlock[1] + 2;
-          PrepareMemBlock.MemoryBlock[1] = 0;
+        // check the connection to GW-USB-xx device
+        bool test = testImp->test();
+        if ( test ) {
+            std::cout << "Connection test OK\n";
+        } else {
+            std::cout << "Connection test FAILED\n";
+            delete testImp;
+            fclose(file);
+            return 2;
         }
-        break;
-      }
+    } catch ( CDCImplException& e ) {
+        std::cout << e.getDescr() << "\n";
+        if ( testImp != NULL )
+            delete testImp;
+        fclose(file);
+        return 1;
+    }
 
-      // print prepared data
-      std::cout << "Data to write:" << std::endl;
-      printDataInHex(DataBuffer, DataSize);
-      std::cout << "Data sent to device" << std::endl;
-
-      // write data to TR module
-      try {
-        PMResponse pmResponse = testImp->upload(Target, DataBuffer, DataSize);
-        if ( pmResponse == PMResponse::OK ) {
-          std::cout << "Data programming OK" << std::endl;
+    // switch device to programming mode
+    try {
+        std::cout << "Entering programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->enterProgrammingMode();
+        if ( pteResponse == PTEResponse::OK ) {
+            std::cout << "Programming mode OK" << std::endl;
+        } else {
+            std::cout << "Programming mode ERROR" << std::endl;
+            if ( testImp != NULL )
+                delete testImp;
+            fclose(file);
+            return 1;
         }
-        else {
-          std::cout << "Data programming failed" << std::endl;
-        }
-      } catch ( CDCSendException& ex ) {
+    } catch ( CDCSendException& ex ) {
         std::cout << ex.getDescr() << std::endl;
         // send exception processing...
-      } catch ( CDCReceiveException& ex ) {
+    } catch ( CDCReceiveException& ex ) {
         std::cout << ex.getDescr() << std::endl;
         // receive exception processing...
-      }
-
-      PrepareMemBlock.MemoryBlockProcessState--;
     }
-  }
 
-  // switch device to normal mode
-  try {
-    std::cout << "Terminating programming mode" << std::endl;
-    PTEResponse pteResponse = testImp->terminateProgrammingMode();
-    if ( pteResponse == PTEResponse::OK ) {
-      std::cout << "Programming mode termination OK" << std::endl;
-    }
-    else {
-      std::cout << "Programming mode termination ERROR" << std::endl;
-    }
-  } catch ( CDCSendException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // send exception processing...
-  } catch ( CDCReceiveException& ex ) {
-    std::cout << ex.getDescr() << std::endl;
-    // receive exception processing...
-  }
+    // read data from input file and write it to TR module in GW-USB-xx device
+    while (1) {
+        // prepare data to write
+        OpResult = iqrfPgmPrepareMemBlock();
+        // check result of data preparing
+        if (OpResult != IQRF_PGM_FLASH_BLOCK_READY
+            && OpResult != IQRF_PGM_EEEPROM_BLOCK_READY
+            && OpResult != IQRF_PGM_EEPROM_BLOCK_READY)
+        {
+            break;  // end programming
+        }
+        // write prepared data to TR module
+        while (PrepareMemBlock.MemoryBlockProcessState) {
 
-  delete testImp;
-  fclose(file);
-  return 0;
+            switch (OpResult) {
+            case IQRF_PGM_FLASH_BLOCK_READY:
+                Target = TARGET_FLASH_W;
+                if (PrepareMemBlock.MemoryBlockProcessState == 2) {
+                    DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[0];
+                    DataSize = 32 + 2;
+                } else {
+                    DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[34];
+                    DataSize = 32 + 2;
+                }
+                break;
+
+            case IQRF_PGM_EEEPROM_BLOCK_READY:
+                Target = TARGET_EEEPROM_W;
+                DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[34];
+                DataSize = 32 + 2;
+                break;
+
+            case IQRF_PGM_EEPROM_BLOCK_READY:
+                Target = TARGET_EEPROM_W;
+                DataBuffer = (uint8_t *)&PrepareMemBlock.MemoryBlock[0];
+                DataSize = PrepareMemBlock.MemoryBlock[1] + 2;
+                PrepareMemBlock.MemoryBlock[1] = 0;
+                break;
+            }
+
+            // print prepared data
+            std::cout << "Data to write:" << std::endl;
+            printDataInHex(DataBuffer, DataSize);
+            std::cout << "Data sent to device" << std::endl;
+
+            // write data to TR module
+            try {
+                PMResponse pmResponse = testImp->upload(Target, DataBuffer, DataSize);
+                if ( pmResponse == PMResponse::OK )
+                    std::cout << "Data programming OK" << std::endl;
+                else
+                    std::cout << "Data programming failed" << std::endl;
+            } catch ( CDCSendException& ex ) {
+                std::cout << ex.getDescr() << std::endl;
+                // send exception processing...
+            } catch ( CDCReceiveException& ex ) {
+                std::cout << ex.getDescr() << std::endl;
+                // receive exception processing...
+            }
+
+            PrepareMemBlock.MemoryBlockProcessState--;
+        }
+    }
+
+    // switch device to normal mode
+    try {
+        std::cout << "Terminating programming mode" << std::endl;
+        PTEResponse pteResponse = testImp->terminateProgrammingMode();
+        if ( pteResponse == PTEResponse::OK )
+            std::cout << "Programming mode termination OK" << std::endl;
+        else
+            std::cout << "Programming mode termination ERROR" << std::endl;
+    } catch ( CDCSendException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // send exception processing...
+    } catch ( CDCReceiveException& ex ) {
+        std::cout << ex.getDescr() << std::endl;
+        // receive exception processing...
+    }
+
+    delete testImp;
+    fclose(file);
+    return 0;
 }
