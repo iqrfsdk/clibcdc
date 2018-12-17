@@ -20,7 +20,7 @@
  * IQRF platform.
  *
  * @author      Michal Konopa, Dusan Machut
- * @version     2.0.0
+ * @version     2.0.1
  * @date        06.10.2018
  * @file        CdcInterface.h
  *
@@ -143,7 +143,7 @@ class CDCInterface {
          * Returns identification of TR module inside the USB device
          * ("IT-command").
          * @return TR module identification.
-         * @return NULL if received identification data are corupted
+         * @return NULL if received identification data are corrupted
          */
         virtual ModuleInfo* getTRModuleInfo(void) = 0;
 

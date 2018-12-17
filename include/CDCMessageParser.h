@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+* Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 
 /**
  * Incomming messages parser for CDCImpl class.
  *
  * @author		Michal Konopa
  * @file		CDCMessageParser.h
- * @version		1.0.0
+ * @version		1.0.1
  * @date		12.9.2012
  */
 
@@ -40,7 +40,7 @@ enum ParseResultType {
 };
 
 /**
- * Result of incomming data parsing process.
+ * Result of incoming data parsing process.
  */
 struct ParseResult {
 	MessageType msgType;    		/**< standard message type */
@@ -114,23 +114,23 @@ public:
 	 * @return data send response from specified data.
 	 */
 	PTEResponse getParsedPEResponse(ustring& data);
-        
+
 	/**
-	 * Returns termonate programming mode response from specified data.
+	 * Returns terminate programming mode response from specified data.
 	 * @return data send response from specified data.
 	 */
 	PTEResponse getParsedPTResponse(ustring& data);
-        
+
 	/**
 	 * Returns upload TR module memory response from specified data.
 	 * @return data send response from specified data.
 	 */
 	PMResponse getParsedPMResponse(ustring& data);
-        
+
 	/**
 	 * Returns data part of last parsed PM message.
-         * Note: Previous call to parseData() must return MSG_DOWNLOAD_DATA 
-         * before you run this mathod. Do not run this method if the call
+         * Note: Previous call to parseData() must return MSG_DOWNLOAD_DATA
+         * before you run this method. Do not run this method if the call
          * returned MSG_UPLOAD_DOWNLOAD.
 	 * @returns data part of last parsed PM message.
 	 */

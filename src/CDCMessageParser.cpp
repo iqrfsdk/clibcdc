@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 MICRORISC s.r.o.
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,8 @@ public:
     struct StateInputPairCompare {
         bool operator() (const StateInputPair& lhs, const StateInputPair& rhs) const
         {
-            if (lhs.stateId != rhs.stateId) {
+            if (lhs.stateId != rhs.stateId)
                 return lhs.stateId < rhs.stateId;
-            }
             return lhs.input < rhs.input;
         }
     };
@@ -132,10 +131,10 @@ public:
         unsigned int pos);
 
 
-    /* Indicates, wheather specified state is final state. */
+    /* Indicates, whether specified state is final state. */
     bool isFiniteState(unsigned int state);
 
-    /* Indicates, wheather specified state is special state. */
+    /* Indicates, whether specified state is special state. */
     bool isSpecialState(unsigned int state);
 
     /* Returns state after specified transition. */
@@ -163,30 +162,31 @@ std::mutex mtxUI;
 /*
  * For converting string literals to unsigned string literals.
  */
-inline const unsigned char* uchar_str(const char* s){
+inline const unsigned char* uchar_str(const char* s)
+{
     return reinterpret_cast<const unsigned char*>(s);
 }
 
 /*
- * Indicates, wheather specified state is final state.
+ * Indicates, whether specified state is final state.
  */
-bool CDCMessageParserPrivate::isFiniteState(unsigned int state) {
+bool CDCMessageParserPrivate::isFiniteState(unsigned int state)
+{
     setOfStates::iterator statesIt = finiteStates.find(state);
-    if (statesIt == finiteStates.end()) {
+    if (statesIt == finiteStates.end())
         return false;
-    }
 
     return true;
 }
 
 /*
- * Indicates, wheather specified state is special state.
+ * Indicates, whether specified state is special state.
  */
-bool CDCMessageParserPrivate::isSpecialState(unsigned int state) {
+bool CDCMessageParserPrivate::isSpecialState(unsigned int state)
+{
     setOfStates::iterator statesIt = specialStates.find(state);
-    if (statesIt == specialStates.end()) {
+    if (statesIt == specialStates.end())
         return false;
-    }
 
     return true;
 }
@@ -196,19 +196,18 @@ bool CDCMessageParserPrivate::isSpecialState(unsigned int state) {
  * If no transition exists, return NO_TRANSITION.
  */
 unsigned int CDCMessageParserPrivate::doTransition(unsigned int state,
-        unsigned char input) {
+        unsigned char input)
+{
     StateInputPair stateInput = { state, input };
 
     stateInputToStateMap::iterator nextStateIt = transitionMap.find(stateInput);
-    if (nextStateIt != transitionMap.end()) {
+    if (nextStateIt != transitionMap.end())
         return nextStateIt->second;
-    }
 
     StateInputPair stateInputAll = { state, INPUT_ALL };
     stateInputToStateMap::iterator nextStateAllIt = transitionMap.find(stateInputAll);
-    if (nextStateAllIt != transitionMap.end()) {
+    if (nextStateAllIt != transitionMap.end())
         return nextStateAllIt->second;
-    }
 
     return NO_TRANSITION;
 }
@@ -217,7 +216,8 @@ unsigned int CDCMessageParserPrivate::doTransition(unsigned int state,
  * Inserts states, which all have specified message type associated with.
  */
 void CDCMessageParserPrivate::insertStatesInfo(unsigned int states[], unsigned int
-        statesSize, MessageType msgType) {
+        statesSize, MessageType msgType)
+{
     for (unsigned int i = 0; i < statesSize; i++) {
         StateInfo stateInfo = { msgType, false };
         statesInfoMap.insert(std::pair<unsigned int, StateInfo>(states[i], stateInfo));
@@ -226,7 +226,8 @@ void CDCMessageParserPrivate::insertStatesInfo(unsigned int states[], unsigned i
 
 /* Inserts states, which all have more message types associated with. */
 void CDCMessageParserPrivate::insertMultiTypeStatesInfo(unsigned int states[],
-        unsigned int statesSize) {
+        unsigned int statesSize)
+{
     for (unsigned int i = 0; i < statesSize; i++) {
         StateInfo stateInfo = { MSG_ERROR, true };
         statesInfoMap.insert(std::pair<unsigned int, StateInfo>(states[i], stateInfo));
@@ -234,7 +235,8 @@ void CDCMessageParserPrivate::insertMultiTypeStatesInfo(unsigned int states[],
 }
 
 /* Inits states info map. */
-void CDCMessageParserPrivate::initStatesInfoMap(void) {
+void CDCMessageParserPrivate::initStatesInfoMap(void)
+{
     unsigned int multiTypeStates[] = { 0, 1, 9, 16, 33, 58, 79, 95};
     insertMultiTypeStatesInfo(multiTypeStates, 8);
 
@@ -289,13 +291,15 @@ void CDCMessageParserPrivate::initStatesInfoMap(void) {
 
 /* Inserts transition into transition map. */
 void CDCMessageParserPrivate::insertTransition(unsigned int stateId, unsigned int input,
-        unsigned int nextStateId) {
+        unsigned int nextStateId)
+{
     StateInputPair inputPair = { stateId, input };
     transitionMap.insert(std::pair<StateInputPair, int>(inputPair, nextStateId));
 }
 
 /* Inits transition map. */
-void CDCMessageParserPrivate::initTransitionMap(void) {
+void CDCMessageParserPrivate::initTransitionMap(void)
+{
     // beginning
     insertTransition(0, '<', 1);
     insertTransition(1, 'E', 2);
@@ -446,7 +450,8 @@ void CDCMessageParserPrivate::initTransitionMap(void) {
 }
 
 /* Inits finite states set. */
-void CDCMessageParserPrivate::initFiniteStates(void) {
+void CDCMessageParserPrivate::initFiniteStates(void)
+{
     finiteStates.insert(5);
     finiteStates.insert(8);
     finiteStates.insert(15);
@@ -471,7 +476,8 @@ void CDCMessageParserPrivate::initFiniteStates(void) {
 }
 
 /* Inits finite states set. */
-void CDCMessageParserPrivate::initSpecialStates(void) {
+void CDCMessageParserPrivate::initSpecialStates(void)
+{
     specialStates.insert(17);
     specialStates.insert(21);
     specialStates.insert(50);
@@ -479,7 +485,8 @@ void CDCMessageParserPrivate::initSpecialStates(void) {
 }
 
 /* Initializes spiModes set. */
-void CDCMessageParserPrivate::initSpiModes() {
+void CDCMessageParserPrivate::initSpiModes()
+{
     spiModes.insert(DISABLED);
     spiModes.insert(SUSPENDED);
     spiModes.insert(BUFF_PROTECT);
@@ -491,7 +498,8 @@ void CDCMessageParserPrivate::initSpiModes() {
     spiModes.insert(HW_ERROR);
 }
 
-CDCMessageParserPrivate::CDCMessageParserPrivate() {
+CDCMessageParserPrivate::CDCMessageParserPrivate()
+{
     initStatesInfoMap();
     initTransitionMap();
     initFiniteStates();
@@ -503,7 +511,8 @@ CDCMessageParserPrivate::CDCMessageParserPrivate() {
     lastParseResult.lastPosition = 0;
 }
 
-CDCMessageParserPrivate::~CDCMessageParserPrivate() {
+CDCMessageParserPrivate::~CDCMessageParserPrivate()
+{
     specialStates.clear();
     finiteStates.clear();
     transitionMap.clear();
@@ -512,43 +521,43 @@ CDCMessageParserPrivate::~CDCMessageParserPrivate() {
 }
 
 
-bool checkUSBDeviceType(unsigned char byteToCheck) {
+bool checkUSBDeviceType(unsigned char byteToCheck)
+{
     return true;
 }
 
 
 
-bool checkUSBDeviceVersion(unsigned char byteToCheck) {
-    if ((byteToCheck >= '0') && (byteToCheck <= '9')) {
+bool checkUSBDeviceVersion(unsigned char byteToCheck)
+{
+    if ((byteToCheck >= '0') && (byteToCheck <= '9'))
         return true;
-    }
 
-    if (byteToCheck == '.') {
+    if (byteToCheck == '.')
         return true;
-    }
 
     return false;
 }
 
-bool checkUSBDeviceId(unsigned char byteToCheck) {
-    if ((byteToCheck >= '0') && (byteToCheck <= '9')) {
+bool checkUSBDeviceId(unsigned char byteToCheck)
+{
+    if ((byteToCheck >= '0') && (byteToCheck <= '9'))
         return true;
-    }
-    if ( ( byteToCheck >= 'A' ) && ( byteToCheck <= 'H' ) ) {
+
+    if ( ( byteToCheck >= 'A' ) && ( byteToCheck <= 'H' ) )
         return true;
-    }
 
     return false;
 }
 
 
 CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processUSBInfo(ustring& data,
-        unsigned int pos) {
+        unsigned int pos)
+{
     StateProcResult procResult = { 17, pos, false };
 
-    if (pos == (data.size() - 1)) {
+    if (pos == (data.size() - 1))
         return procResult;
-    }
 
     const unsigned int TYPE = 0;
     const unsigned int VERSION = 1;
@@ -581,28 +590,24 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processUSBInfo
         }
 
         switch (activeSection) {
-            case TYPE:
-                if (!checkUSBDeviceType(data[i])) {
-                    procResult.formatError = true;
-                }
+        case TYPE:
+            if (!checkUSBDeviceType(data[i]))
+                procResult.formatError = true;
             break;
 
-            case VERSION:
-                if (!checkUSBDeviceVersion(data[i])) {
-                    procResult.formatError = true;
-                }
+        case VERSION:
+            if (!checkUSBDeviceVersion(data[i]))
+                procResult.formatError = true;
             break;
 
-            case ID:
-                if (!checkUSBDeviceId(data[i])) {
-                    procResult.formatError = true;
-                }
+        case ID:
+            if (!checkUSBDeviceId(data[i]))
+                procResult.formatError = true;
             break;
         }
 
-        if (procResult.formatError) {
+        if (procResult.formatError)
             break;
-        }
     }
 
     return procResult;
@@ -610,7 +615,8 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processUSBInfo
 
 /* Processes state 21. */
 CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processTRInfo(ustring& data,
-        unsigned int pos) {
+        unsigned int pos)
+{
 
     const unsigned int MODULE_DATA_SIZE = 32;
     const unsigned int STANDARD_IDF_SIZE = 21;
@@ -618,15 +624,13 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processTRInfo(
 
     StateProcResult procResult = { 21, pos, false };
 
-    if (pos == (data.size() - 1)) {
+    if (pos == (data.size() - 1))
         return procResult;
-    }
 
     if (data.size() <= EXTENDED_IDF_SIZE) {
         if (data.size() != STANDARD_IDF_SIZE && data.size() != EXTENDED_IDF_SIZE) {
             return procResult;
-        }
-        else {
+        } else {
             if (data.size() == STANDARD_IDF_SIZE && data.at(STANDARD_IDF_SIZE - 1) != 0x0D) {
                 return procResult;
             }
@@ -646,33 +650,32 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processTRInfo(
 
 /* Processes state 50. */
 CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processAsynData(ustring& data,
-        unsigned int pos) {
+        unsigned int pos)
+{
     StateProcResult procResult = { 50, pos, false };
 
-    if (pos == (data.size() - 1)) {
+    if (pos == (data.size() - 1))
         return procResult;
-    }
 
     procResult.newState = 51;
     unsigned int dataLength = data.at(pos-2);
 
-    if ((pos + dataLength) >= data.size()) {
+    if ((pos + dataLength) >= data.size())
         procResult.lastPosition = data.size()-1;
-    } else {
+    else
         procResult.lastPosition = (pos-1) + dataLength;
-    }
 
     return procResult;
 }
 
 /* Processes state 95. Heuristic - error/upload message or valid download data */
 CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processPMRespData(ustring& data,
-        unsigned int pos) {
+        unsigned int pos)
+{
     StateProcResult procResult = { 95, pos, false };
 
-    if (pos == (data.size() - 1)) {
+    if (pos == (data.size() - 1))
         return procResult;
-    }
 
     // Check length of message with error codes
     if (data.size() == 7 || data.size() == 9) {
@@ -693,7 +696,8 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processPMRespD
  * Processes specified special state.
  */
 CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processSpecialState(
-        unsigned int state, ustring& data, unsigned int pos) {
+        unsigned int state, ustring& data, unsigned int pos)
+{
     switch (state) {
     case 17:
         return processUSBInfo(data, pos);
@@ -711,7 +715,8 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processSpecial
     throw CDCMessageParserException((excStream.str()).c_str());
 }
 
-ParseResult CDCMessageParserPrivate::parseData(ustring& data) {
+ParseResult CDCMessageParserPrivate::parseData(ustring& data)
+{
     lastParsedData = data;
     lastParseResult.resultType = PARSE_NOT_COMPLETE;
     unsigned int state = INITIAL_STATE;
@@ -763,17 +768,20 @@ ParseResult CDCMessageParserPrivate::parseData(ustring& data) {
 
 
 /* PUBLIC INTERFACE. */
-CDCMessageParser::CDCMessageParser() {
+CDCMessageParser::CDCMessageParser()
+{
     implObj = ant_new CDCMessageParserPrivate();
     //InitializeCriticalSection(&csUI);
 }
 
-CDCMessageParser::~CDCMessageParser() {
+CDCMessageParser::~CDCMessageParser()
+{
     delete implObj;
     //DeleteCriticalSection(&csUI);
 }
 
-ParseResult CDCMessageParser::parseData(ustring& data) {
+ParseResult CDCMessageParser::parseData(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     ParseResult parseResult = implObj->parseData(data);
@@ -782,7 +790,8 @@ ParseResult CDCMessageParser::parseData(ustring& data) {
     return parseResult;
 }
 
-DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
+DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     DeviceInfo* devInfo = ant_new DeviceInfo();
@@ -818,14 +827,16 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data) {
     return devInfo;
 }
 
-ModuleInfo* CDCMessageParser::getParsedModuleInfo(ustring& data) {
+ModuleInfo* CDCMessageParser::getParsedModuleInfo(ustring& data)
+{
     #define STANDARD_IDF_SIZE   21
     #define EXTENDED_IDF_SIZE   37
 
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     // if TR identification data size is wrong, return NULL
-    if (data.size() != STANDARD_IDF_SIZE && data.size() != EXTENDED_IDF_SIZE) return NULL;
+    if (data.size() != STANDARD_IDF_SIZE && data.size() != EXTENDED_IDF_SIZE)
+        return NULL;
 
     ModuleInfo* modInfo = ant_new ModuleInfo();
     size_t msgBodyPos = 4;
@@ -845,43 +856,40 @@ ModuleInfo* CDCMessageParser::getParsedModuleInfo(ustring& data) {
     infoId++;
 
     // read OS build
-    for (unsigned int i = 0; i < ModuleInfo::BUILD_SIZE; i++, infoId++) {
+    for (unsigned int i = 0; i < ModuleInfo::BUILD_SIZE; i++, infoId++)
         modInfo->osBuild[i] = data.at(msgBodyPos+infoId);
-    }
 
     // read reserved area
-    for (unsigned int i = 0; i < ModuleInfo::RESERVED_SIZE; i++, infoId++) {
+    for (unsigned int i = 0; i < ModuleInfo::RESERVED_SIZE; i++, infoId++)
         modInfo->reserved[i] = data.at(msgBodyPos+infoId);
-    }
 
     // check if TR module supports extended idf format
     unsigned int extendedIdfFormat = 0;
-    if (data.size() == EXTENDED_IDF_SIZE) extendedIdfFormat = 1;
+    if (data.size() == EXTENDED_IDF_SIZE)
+        extendedIdfFormat = 1;
 
     // read individual bonding key
     for (unsigned int i = 0; i < ModuleInfo::IBK_SIZE; i++, infoId++) {
-        if (extendedIdfFormat){
+        if (extendedIdfFormat)
             modInfo->ibk[i] = data.at(msgBodyPos+infoId);
-        }
-        else {
+        else
             modInfo->ibk[i] = 0;
-        }
     }
 
     //LeaveCriticalSection(&csUI);
     return modInfo;
 }
 
-SPIStatus CDCMessageParser::getParsedSPIStatus(ustring& data) {
+SPIStatus CDCMessageParser::getParsedSPIStatus(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     SPIStatus spiStatus;
     size_t msgBodyPos = 3;
 
     int parsedValue = data.at(msgBodyPos);
-    if (parsedValue < 0) {
+    if (parsedValue < 0)
         parsedValue += 256;
-    }
 
     if (implObj->spiModes.find((SPIModes)parsedValue) != implObj->spiModes.end()) {
         spiStatus.SPI_MODE = (SPIModes)parsedValue;
@@ -895,7 +903,8 @@ SPIStatus CDCMessageParser::getParsedSPIStatus(ustring& data) {
     return spiStatus;
 }
 
-DSResponse CDCMessageParser::getParsedDSResponse(ustring& data) {
+DSResponse CDCMessageParser::getParsedDSResponse(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     size_t msgBodyPos = 4;
@@ -919,13 +928,14 @@ DSResponse CDCMessageParser::getParsedDSResponse(ustring& data) {
 
     //LeaveCriticalSection(&csUI);
 
-    // error - unknown type of reponse
+    // error - unknown type of response
     std::stringstream excStream;
     excStream << "Unknown DS response value: " << msgBody.c_str();
     throw CDCMessageParserException((excStream.str()).c_str());
 }
 
-ustring CDCMessageParser::getParsedDRData(ustring& data) {
+ustring CDCMessageParser::getParsedDRData(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     size_t userDataStart = 5;
@@ -936,7 +946,8 @@ ustring CDCMessageParser::getParsedDRData(ustring& data) {
     return userData;
 }
 
-PTEResponse CDCMessageParser::getParsedPEResponse(ustring& data) {
+PTEResponse CDCMessageParser::getParsedPEResponse(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     size_t msgBodyPos = 4;
@@ -955,13 +966,14 @@ PTEResponse CDCMessageParser::getParsedPEResponse(ustring& data) {
 
     //LeaveCriticalSection(&csUI);
 
-    // error - unknown type of reponse
+    // error - unknown type of response
     std::stringstream excStream;
     excStream << "Unknown PE response value: " << msgBody.c_str();
     throw CDCMessageParserException((excStream.str()).c_str());
 }
 
-PTEResponse CDCMessageParser::getParsedPTResponse(ustring& data) {
+PTEResponse CDCMessageParser::getParsedPTResponse(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     size_t msgBodyPos = 4;
@@ -980,13 +992,14 @@ PTEResponse CDCMessageParser::getParsedPTResponse(ustring& data) {
 
     //LeaveCriticalSection(&csUI);
 
-    // error - unknown type of reponse
+    // error - unknown type of response
     std::stringstream excStream;
     excStream << "Unknown PT response value: " << msgBody.c_str();
     throw CDCMessageParserException((excStream.str()).c_str());
 }
 
-PMResponse CDCMessageParser::getParsedPMResponse(ustring& data) {
+PMResponse CDCMessageParser::getParsedPMResponse(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     size_t msgBodyPos = 4;
@@ -1035,13 +1048,14 @@ PMResponse CDCMessageParser::getParsedPMResponse(ustring& data) {
 
     //LeaveCriticalSection(&csUI);
 
-    // error - unknown type of reponse
+    // error - unknown type of response
     std::stringstream excStream;
     excStream << "Unknown PM response value: " << msgBody.c_str();
     throw CDCMessageParserException((excStream.str()).c_str());
 }
 
-ustring CDCMessageParser::getParsedPMData(ustring& data) {
+ustring CDCMessageParser::getParsedPMData(ustring& data)
+{
     std::lock_guard<std::mutex> lck(mtxUI);	//EnterCriticalSection(&csUI);
 
     size_t userDataStart = 4;

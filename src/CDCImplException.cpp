@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,23 @@
 #include <CDCImplException.h>
 
 
-void CDCImplException::createDescription() {
+void CDCImplException::createDescription()
+{
     descr.clear();
 	descr.append(identity);
 	descr.append(": ");
 	descr.append(cause);
 }
 
-CDCImplException::CDCImplException(const char* cause) {
+CDCImplException::CDCImplException(const char* cause)
+{
 	this->identity = "CDCImplException";
 	this->cause = cause;
 	createDescription();
 }
 
-CDCImplException::~CDCImplException() throw() {
+CDCImplException::~CDCImplException() throw()
+{
 	identity.clear();
 	cause.clear();
 	descr.clear();
@@ -39,13 +42,15 @@ CDCImplException::~CDCImplException() throw() {
 /*
  * Returns the cause of this exception.
  */
-const char* CDCImplException::what() const throw() {
+const char* CDCImplException::what() const throw()
+{
 	return cause.c_str();
 }
 
 /*
  * Returns complete description of this exception.
  */
-const char* CDCImplException::getDescr() {
+const char* CDCImplException::getDescr()
+{
 	return descr.c_str();
 }

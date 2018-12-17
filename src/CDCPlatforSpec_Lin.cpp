@@ -1,5 +1,5 @@
-/* 
- * Copyright 2015 MICRORISC s.r.o.
+/*
+ * Copyright 2018 IQRF Tech s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@
 using namespace std;
 
 /* Wrapper for standard 'select' function. */
-int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout) {
-    if (fds.empty()) {
+int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout)
+{
+    if (fds.empty())
         return 0;
-    }
 
     int maxFd = 0;
     fd_set selFds;
@@ -45,9 +45,8 @@ int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout) {
     set<int>::iterator fdsIt = fds.begin();
     for (;fdsIt != fds.end(); fdsIt++) {
         FD_SET(*fdsIt, &selFds);
-        if (*fdsIt > maxFd) {
+        if (*fdsIt > maxFd)
             maxFd = (*fdsIt);
-        }
     }
 
     maxFd++;
@@ -56,23 +55,21 @@ int selectEvents(std::set<int>& fds, EventType evType, unsigned int timeout) {
         waitTime.tv_sec = timeout;
         waitTime.tv_usec = 0;
 
-        if (evType == READ_EVENT) {
+        if (evType == READ_EVENT)
             return select(maxFd, &selFds, NULL, NULL, &waitTime);
-        }
-        if (evType == WRITE_EVENT) {
+
+        if (evType == WRITE_EVENT)
             return select(maxFd, NULL, &selFds, NULL, &waitTime);
-        }
 
         // no other event type - params error
         return -1;
     }
 
-    if (evType == READ_EVENT) {
+    if (evType == READ_EVENT)
         return select(maxFd, &selFds, NULL, NULL, NULL);
-    }
-    if (evType == WRITE_EVENT) {
+
+    if (evType == WRITE_EVENT)
         return select(maxFd, NULL, &selFds, NULL, NULL);
-    }
 
     // no other event type - params error
     return -1;
