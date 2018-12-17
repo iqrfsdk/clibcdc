@@ -18,8 +18,8 @@
  * TR module programming example (*.trcnfg file)
  *
  * @author      Dusan Machut
- * @version     1.0.1
- * @date        8.5.2018
+ * @version     1.0.2
+ * @date        17.12.2018
  */
 
 #include <CDCImpl.h>
@@ -87,9 +87,6 @@ int main(int argc, char** argv)
     uint32_t CfgFileSize;
     int Cnt;
 
-#if defined(WIN32) && defined(_DEBUG)
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
     std::string port_name;
     // check input parameters
     if (argc < 3) {

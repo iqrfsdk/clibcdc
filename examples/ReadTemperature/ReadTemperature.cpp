@@ -17,9 +17,9 @@
 /**
  * DPA Write-Read example
  *
- * @author      Michal Konopa, Rostislav Spinar
- * @version     1.0.1
- * @date        16.12.2018
+ * @author      Michal Konopa, Rostislav Spinar, Dusan Machut
+ * @version     1.0.2
+ * @date        17.12.2018
  */
 
 #include <CDCImpl.h>
