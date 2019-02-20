@@ -72,12 +72,12 @@ int CDCImplPrivate::readMsgThread()
     try {
         // critical initialization setting - if it fails, cannot continue
         if (!SetCommMask(portHandle, eventFlags))
-            THROW_EXC(CDCReceiveException, "SetCommMask failed with error " << GetLastError());
+            THROW_EXCEPT(CDCReceiveException, "SetCommMask failed with error " << GetLastError());
 
         // critical initialization setting - if it fails, cannot continue
         overlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
         if (overlap.hEvent == NULL)
-            THROW_EXC(CDCReceiveException, "Create read char event failed with error " << GetLastError());
+            THROW_EXCEPT(CDCReceiveException, "Create read char event failed with error " << GetLastError());
 
         HANDLE waitEvents[2];
         waitEvents[0] = overlap.hEvent;
@@ -94,7 +94,7 @@ int CDCImplPrivate::readMsgThread()
 
             if (!waitEventResult) {
                 if (GetLastError() != ERROR_IO_PENDING)  {
-                    THROW_EXC(CDCReceiveException, "Waiting for char event failed with error " << GetLastError());
+                    THROW_EXCEPT(CDCReceiveException, "Waiting for char event failed with error " << GetLastError());
                 } else {
                     // Waiting for WaitCommEvent to finish
                     //cout << "WaitCommEvent waiting to finish" << endl;
@@ -106,7 +106,7 @@ int CDCImplPrivate::readMsgThread()
                     // Event occurred.
                     case WAIT_OBJECT_0:
                         if (!GetOverlappedResult(portHandle, &overlap, &bytesTotal, FALSE)) {
-                            THROW_EXC(CDCReceiveException, "Waiting for char event failed with error " << GetLastError());
+                            THROW_EXCEPT(CDCReceiveException, "Waiting for char event failed with error " << GetLastError());
                         } else {
                             // WaitCommEvent returned.
                             // Deal with reading event as appropriate.
@@ -150,7 +150,7 @@ int CDCImplPrivate::readMsgThread()
                         // read not delayed?
                         if (GetLastError() != ERROR_IO_PENDING) {
                             // Error in communications; report it.
-                            THROW_EXC(CDCReceiveException, "Reading failed with error " << GetLastError());
+                            THROW_EXCEPT(CDCReceiveException, "Reading failed with error " << GetLastError());
                         } else {
                             //cout << "Waiting for reading..." << endl;
 
@@ -196,7 +196,7 @@ int CDCImplPrivate::readMsgThread()
                     // Read completed.
                     case WAIT_OBJECT_0:
                         if (!GetOverlappedResult(portHandle, &overlap, &bytesTotal, FALSE)) {
-                            THROW_EXC(CDCReceiveException, "Waiting for reading event failed with error " << GetLastError());
+                            THROW_EXCEPT(CDCReceiveException, "Waiting for reading event failed with error " << GetLastError());
                         } else {
                             // Read completed successfully.
                             //cout << "Reading overlap:" << ++count2 << endl;
@@ -238,7 +238,7 @@ int CDCImplPrivate::readMsgThread()
                         // Error in the WaitForSingleObject; abort.
                         // This indicates a problem with the OVERLAPPED structure's
                         // event handle.
-                        THROW_EXC(CDCReceiveException, "Waiting for event in read cycle failed with error " << GetLastError());
+                        THROW_EXCEPT(CDCReceiveException, "Waiting for event in read cycle failed with error " << GetLastError());
                     }
                 }
             } while (bytesTotal);
@@ -277,29 +277,29 @@ void CDCImplPrivate::sendCommand(Command& cmd)
 
     overlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (overlap.hEvent == NULL)
-        THROW_EXC(CDCSendException, "Creating send event failed with error " << GetLastError());
+        THROW_EXCEPT(CDCSendException, "Creating send event failed with error " << GetLastError());
 
     BuffCommand buffCmd = commandToBuffer(cmd);
     DWORD bytesWritten = 0;
     if (!WriteFile(portHandle, buffCmd.cmd, buffCmd.len, &bytesWritten, &overlap)) {
         if (GetLastError() != ERROR_IO_PENDING) {
-            THROW_EXC(CDCSendException, "Sending message failed with error " << GetLastError());
+            THROW_EXCEPT(CDCSendException, "Sending message failed with error " << GetLastError());
         } else {
             DWORD waitResult = WaitForSingleObject(overlap.hEvent, TM_SEND_MSG);
             switch (waitResult) {
             case WAIT_OBJECT_0:
                 if (!GetOverlappedResult(portHandle, &overlap, &bytesWritten, FALSE)) {
-                    THROW_EXC(CDCSendException, "Waiting for send failed with error " << GetLastError());
+                    THROW_EXCEPT(CDCSendException, "Waiting for send failed with error " << GetLastError());
                 } else {
                     // Write operation completed successfully
                 }
                 break;
 
             case WAIT_TIMEOUT:
-                THROW_EXC(CDCSendException, "Waiting for send timeouted");
+                THROW_EXCEPT(CDCSendException, "Waiting for send timeouted");
 
             default:
-                THROW_EXC(CDCSendException, "Waiting for send failed with error " << GetLastError());
+                THROW_EXCEPT(CDCSendException, "Waiting for send failed with error " << GetLastError());
             }
         }
     } else {
@@ -313,20 +313,20 @@ void CDCImplPrivate::sendCommand(Command& cmd)
 void CDCImplPrivate::setMyEvent(HANDLE evnt)
 {
     if (!SetEvent(evnt))
-        THROW_EXC(CDCImplException, "Signaling anew message event failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Signaling anew message event failed with error " << GetLastError());
 }
 
 void CDCImplPrivate::resetMyEvent(HANDLE evnt)
 {
     if (!ResetEvent(evnt))
-        THROW_EXC(CDCImplException, "Reset start read event failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Reset start read event failed with error " << GetLastError());
 }
 
 void CDCImplPrivate::createMyEvent(HANDLE & evnt)
 {
     evnt = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (evnt == NULL)
-        THROW_EXC(CDCImplException, "Create anew message event failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Create anew message event failed with error " << GetLastError());
 }
 
 void CDCImplPrivate::destroyMyEvent(HANDLE & evnt)
@@ -349,9 +349,9 @@ DWORD CDCImplPrivate::waitForMyEvent(HANDLE evnt, DWORD timeout)
         // OK
         break;
     case WAIT_TIMEOUT:
-        THROW_EXC(CDCReceiveException, "Waiting for event timeouted");
+        THROW_EXCEPT(CDCReceiveException, "Waiting for event timeouted");
     default:
-        THROW_EXC(CDCReceiveException, "WaitForSingleObject failed with error " << GetLastError());
+        THROW_EXCEPT(CDCReceiveException, "WaitForSingleObject failed with error " << GetLastError());
     }
 
     return waitResult;
@@ -375,7 +375,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
 
     LPTSTR completePortName = getCompletePortName(portNameU.c_str());
     if (completePortName == NULL)
-        THROW_EXC(CDCImplException, "Complete port name creation failed");
+        THROW_EXCEPT(CDCImplException, "Complete port name creation failed");
 
     HANDLE portHandle = CreateFile(completePortName,
         GENERIC_READ | GENERIC_WRITE, // read and write
@@ -387,7 +387,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
 
     //  Handle the error.
     if (portHandle == INVALID_HANDLE_VALUE)
-        THROW_EXC(CDCImplException, "Port handle creation failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Port handle creation failed with error " << GetLastError());
 
     delete[] completePortName;
 
@@ -398,7 +398,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
 
     BOOL getStateResult = GetCommState(portHandle, &dcb);
     if (!getStateResult)
-        THROW_EXC(CDCImplException, "Port state getting failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Port state getting failed with error " << GetLastError());
 
     // set comm parameters
     dcb.BaudRate = CBR_57600;     //  baud rate
@@ -408,7 +408,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
 
     BOOL setStateResult = SetCommState(portHandle, &dcb);
     if (!setStateResult)
-        THROW_EXC(CDCImplException, "Port state setting failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Port state setting failed with error " << GetLastError());
 
     // printCommState(dcb);
 
@@ -418,7 +418,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
 
     BOOL getToutsResult = GetCommTimeouts(portHandle, &timeouts);
     if (!getToutsResult)
-        THROW_EXC(CDCImplException, "Port timeouts getting failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Port timeouts getting failed with error " << GetLastError());
 
     //printTimeouts(timeouts);
 
@@ -429,7 +429,7 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
     timeouts.WriteTotalTimeoutMultiplier = 10;
 
     if (!SetCommTimeouts(portHandle, &timeouts))
-        THROW_EXC(CDCImplException, "Port timeouts setting failed with error " << GetLastError());
+        THROW_EXCEPT(CDCImplException, "Port timeouts setting failed with error " << GetLastError());
 
     return portHandle;
 }

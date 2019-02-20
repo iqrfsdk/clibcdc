@@ -40,7 +40,9 @@ enum MessageType {
 };
 
 #if defined _WIN32 || defined _WIN64
+#ifndef WIN32
 #define WIN32
+#endif
 #endif
 
 #ifdef WIN32

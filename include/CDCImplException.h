@@ -73,7 +73,7 @@ public:
 };
 
 //TODO ifdef DEBUG
-#define THROW_EXC(extype, msg) { \
+#define THROW_EXCEPT(extype, msg) { \
   std::ostringstream ostr; ostr << __FILE__ << " " << __LINE__ << msg; \
   extype ex(ostr.str().c_str()); throw ex; }
 

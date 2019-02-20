@@ -642,7 +642,7 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processTRInfo(
     if ((data.size()-1) > (pos + MODULE_DATA_SIZE)) {
         procResult.lastPosition = pos-1 + MODULE_DATA_SIZE;
     } else {
-        procResult.lastPosition = data.size()-2;
+        procResult.lastPosition = static_cast<unsigned int>(data.size())-2;
     }
 
     return procResult;
@@ -661,7 +661,7 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processAsynDat
     unsigned int dataLength = data.at(pos-2);
 
     if ((pos + dataLength) >= data.size())
-        procResult.lastPosition = data.size()-1;
+        procResult.lastPosition = static_cast<unsigned int>(data.size())-1;
     else
         procResult.lastPosition = (pos-1) + dataLength;
 
@@ -686,7 +686,7 @@ CDCMessageParserPrivate::StateProcResult CDCMessageParserPrivate::processPMRespD
         // Message length should be 5 or 36. However, we threat
         // all message lengths other than 7 and 9 as download data.
         procResult.newState = 96;
-        procResult.lastPosition = data.size()-2;
+        procResult.lastPosition = static_cast<unsigned int>(data.size())-2;
     }
 
     return procResult;
@@ -803,7 +803,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data)
 
     devInfo->type = ant_new char[typeSize + 1];
     typeStr.copy ((unsigned char*)devInfo->type, typeStr.size()); //strcpy(devInfo->type, (const char*)typeStr.c_str());
-    devInfo->typeLen = typeSize;
+    devInfo->typeLen = static_cast<unsigned int>(typeSize);
 
     // firmware version parsing
     size_t secondHashPos = data.find('#', firstHashPos+1);
@@ -812,7 +812,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data)
 
     devInfo->firmwareVersion = ant_new char[fmSize + 1];
     fmStr.copy ((unsigned char*)devInfo->firmwareVersion, fmStr.size()); //strcpy(devInfo->firmwareVersion, (const char*)fmStr.c_str());
-    devInfo->fwLen = fmSize;
+    devInfo->fwLen = static_cast<unsigned int>(fmSize);
 
     // serial number parsing
     size_t crPos = data.find(13, secondHashPos+1);
@@ -821,7 +821,7 @@ DeviceInfo* CDCMessageParser::getParsedDeviceInfo(ustring& data)
 
     devInfo->serialNumber = ant_new char[snSize + 1];
     snStr.copy ((unsigned char*)devInfo->serialNumber, snStr.size()); //strcpy(devInfo->serialNumber, (const char*)snStr.c_str());
-    devInfo->snLen = snSize;
+    devInfo->snLen = static_cast<unsigned int>(snSize);
 
     //LeaveCriticalSection(&csUI);
     return devInfo;

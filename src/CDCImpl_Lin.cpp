@@ -66,7 +66,7 @@ int CDCImplPrivate::readMsgThread()
             int waitResult = select(maxEventNum, &waitEvents, NULL, NULL, NULL);
             switch (waitResult) {
             case -1:
-                THROW_EXC(CDCReceiveException, "Waiting for event in read cycle failed with error " << errno);
+                THROW_EXCEPT(CDCReceiveException, "Waiting for event in read cycle failed with error " << errno);
                 break;
             case 0:
                 // only in the case of timeout period expires
@@ -108,7 +108,7 @@ int CDCImplPrivate::appendDataFromPort(unsigned char* buf, unsigned buflen, ustr
     ssize_t readResult = read(portHandle, (void*)buf, buflen);
     if (readResult == -1)
         // error in communication
-        THROW_EXC(CDCReceiveException, "Appending data from COM-port failed with error " << errno);
+        THROW_EXCEPT(CDCReceiveException, "Appending data from COM-port failed with error " << errno);
 
     destBuffer.append(buf, readResult);
     size_t endPos = destBuffer.find(0x0D);
@@ -134,14 +134,14 @@ void CDCImplPrivate::sendCommand(Command& cmd)
     while (dataLen > 0) {
         int selResult = selectEvents(fds, WRITE_EVENT, TM_SEND_MSG);
         if (selResult == -1)
-            THROW_EXC(CDCSendException, "Sending message failed with error " << errno);
+            THROW_EXCEPT(CDCSendException, "Sending message failed with error " << errno);
 
         if (selResult == 0)
             throw CDCSendException("Waiting for send timeouted");
 
         int writeResult = write(portHandle, dataToWrite, dataLen);
         if (writeResult == -1)
-            THROW_EXC(CDCSendException, "Sending message failed with error " << errno);
+            THROW_EXCEPT(CDCSendException, "Sending message failed with error " << errno);
 
         dataLen -= writeResult;
         dataToWrite += writeResult;
@@ -154,7 +154,7 @@ void CDCImplPrivate::setMyEvent(HANDLE evnt)
     uint64_t readEndData = 1;
     ssize_t ret = write(evnt, &readEndData, sizeof(uint64_t));
     if (ret != sizeof(uint64_t))
-        THROW_EXC(CDCImplException, "Signaling new message event failed with error " << errno);
+        THROW_EXCEPT(CDCImplException, "Signaling new message event failed with error " << errno);
 }
 
 void CDCImplPrivate::resetMyEvent(HANDLE evnt)
@@ -166,7 +166,7 @@ void CDCImplPrivate::createMyEvent(HANDLE & event)
 {
     event = eventfd(0, 0);
     if (event == -1)
-        THROW_EXC(CDCImplException, "Create new message event failed with error " << errno);
+        THROW_EXCEPT(CDCImplException, "Create new message event failed with error " << errno);
 }
 
 void CDCImplPrivate::destroyMyEvent(HANDLE & event)
@@ -186,17 +186,17 @@ DWORD CDCImplPrivate::waitForMyEvent(HANDLE evnt, DWORD timeout)
 
     switch (waitResult) {
     case -1:
-        THROW_EXC(CDCReceiveException, "Waiting in selectEvents failed with error " << errno);
+        THROW_EXCEPT(CDCReceiveException, "Waiting in selectEvents failed with error " << errno);
         break;
     case 0:
-        THROW_EXC(CDCReceiveException, "Waiting for event timeout");
+        THROW_EXCEPT(CDCReceiveException, "Waiting for event timeout");
         break;
     default:
         // OK
         //TODO aditional check - is it necessary here?
         uint64_t respData = 0;
         if (read(evnt, &respData, sizeof(uint_fast64_t)) == -1)
-            THROW_EXC(CDCReceiveException, "Waiting for response failed with error " << errno);
+            THROW_EXCEPT(CDCReceiveException, "Waiting for response failed with error " << errno);
         break;
     }
     return waitResult;
@@ -210,16 +210,16 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
 
     //  Handle the error.
     if (portHandle == -1)
-        THROW_EXC(CDCImplException, "Port handle creation failed with error " << errno);
+        THROW_EXCEPT(CDCImplException, "Port handle creation failed with error " << errno);
 
     if (isatty(portHandle) == 0)
-        THROW_EXC(CDCImplException, "Specified file is not associated with terminal " << errno);
+        THROW_EXCEPT(CDCImplException, "Specified file is not associated with terminal " << errno);
 
     struct termios portOptions;
 
     // get current settings of the serial port
     if (tcgetattr(portHandle, &portOptions) == -1)
-        THROW_EXC(CDCImplException, "Port parameters getting failed with error " << errno);
+        THROW_EXCEPT(CDCImplException, "Port parameters getting failed with error " << errno);
 
     /*
      * Turn of:
@@ -257,14 +257,14 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
     portOptions.c_cc[VTIME] = 0;
 
     if (tcsetattr(portHandle, TCSANOW, &portOptions) == -1)
-        THROW_EXC(CDCImplException, "Port parameters setting failed with error " << errno);
+        THROW_EXCEPT(CDCImplException, "Port parameters setting failed with error " << errno);
 
     // required to make flush to work because of Linux kernel bug
     if ( sleep(2) != 0 )
-        THROW_EXC(CDCImplException, "Sleeping before flushing the port not elapsed");
+        THROW_EXCEPT(CDCImplException, "Sleeping before flushing the port not elapsed");
 
     if ( tcflush(portHandle, TCIOFLUSH) != 0 )
-        THROW_EXC(CDCImplException, "Port flushing failed with error" << errno);
+        THROW_EXCEPT(CDCImplException, "Port flushing failed with error" << errno);
 
     return portHandle;
 }

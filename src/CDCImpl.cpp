@@ -143,7 +143,7 @@ static void verifyUpload(unsigned char target, const std::basic_string<unsigned 
     if ((target & 0x80) == 0) {
         std::ostringstream msg;
         msg << "Download target " << std::hex << std::showbase << target << " is not valid target for upload operation!";
-        THROW_EXC(CDCSendException, msg.str());
+        THROW_EXCEPT(CDCSendException, msg.str());
     }
     // TODO: Add other checks in the future
 }
@@ -153,7 +153,7 @@ static void verifyDownload(unsigned char target)
     if ((target & 0x80) != 0) {
         std::ostringstream msg;
         msg << "Upload target " << std::hex << std::showbase << target << " is not valid target for download operation!";
-        THROW_EXC(CDCSendException, msg.str());
+        THROW_EXCEPT(CDCSendException, msg.str());
     }
     // TODO: Add other checks in the future
 }
@@ -192,10 +192,10 @@ PMResponse CDCImpl::download(unsigned char target, const unsigned char* inputDat
         if (dataStr.length() >= outputDlen) {
             std::ostringstream msg;
             msg << "Receive of download message failed. Data are longer than available data buffer - " << dataStr.length() << " >= " << outputDlen << "!";
-            THROW_EXC(CDCReceiveException, msg.str());
+            THROW_EXCEPT(CDCReceiveException, msg.str());
         }
         std::copy_n(dataStr.data(), dataStr.length(), outputData);
-        len = dataStr.length();
+        len = static_cast<unsigned int>(dataStr.length());
         return PMResponse::OK;
     } else {
         return implObj->msgParser->getParsedPMResponse(implObj->lastResponse.message);
@@ -410,7 +410,7 @@ void CDCImplPrivate::processMessage(ParsedMessage& parsedMessage)
             userData.copy(userDataBytes, userData.length());
             userDataBytes[userData.length()] = '\0';
 
-            asyncListener(userDataBytes, userData.length());
+            asyncListener(userDataBytes, static_cast<unsigned int>(userData.length()));
             delete[] userDataBytes;
         }
 
@@ -520,9 +520,9 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd)
 
     if (cmd.msgType == MSG_DATA_SEND) {
         if (cmd.data.size() > UCHAR_MAX)
-            THROW_EXC(CDCSendException, "Data size too large");
+            THROW_EXCEPT(CDCSendException, "Data size too large");
 
-        tmpStr.append(1, cmd.data.size());
+        tmpStr.append(1, static_cast<unsigned char>(cmd.data.size()));
 
         // appending data length in hex format
         /*
@@ -541,7 +541,7 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd)
 
     if (cmd.msgType == MSG_UPLOAD_DOWNLOAD || cmd.msgType == MSG_DOWNLOAD_DATA) {
         if (cmd.data.size() > UCHAR_MAX)
-            THROW_EXC(CDCSendException, "Data size too large");
+            THROW_EXCEPT(CDCSendException, "Data size too large");
         tmpStr.append(cmd.data);
     }
 
@@ -551,13 +551,13 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd)
     if (m_transmitBufferLen < sz) { //reallocate
         delete[] m_transmitBuffer;
         m_transmitBuffer = ant_new unsigned char[sz];
-        m_transmitBufferLen = sz;
+        m_transmitBufferLen = static_cast<DWORD>(sz);
     }
 
     BuffCommand buffCmd;
     buffCmd.cmd = m_transmitBuffer;
     tmpStr.copy(buffCmd.cmd, sz);
-    buffCmd.len = sz;
+    buffCmd.len = static_cast<DWORD>(sz);
 
     return buffCmd;
 }
@@ -585,7 +585,7 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd)
 void CDCImplPrivate::processCommand(Command& cmd)
 {
     if (getReceptionStopped())
-        THROW_EXC(CDCSendException, "Reading is actually stopped")
+        THROW_EXCEPT(CDCSendException, "Reading is actually stopped")
 
     sendCommand(cmd);
     //wait for response
@@ -597,7 +597,7 @@ void CDCImplPrivate::processCommand(Command& cmd)
                 && (lastResponse.parseResult.msgType == MSG_DOWNLOAD_DATA)
                 && ((cmd.data[0] & 0x80) == 0)))
         {
-            THROW_EXC(CDCReceiveException, "Response has bad type.");
+            THROW_EXCEPT(CDCReceiveException, "Response has bad type.");
         }
     }
 }
