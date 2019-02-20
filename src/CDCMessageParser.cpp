@@ -523,6 +523,7 @@ CDCMessageParserPrivate::~CDCMessageParserPrivate()
 
 bool checkUSBDeviceType(unsigned char byteToCheck)
 {
+    (void)byteToCheck; //silence -Wunused-parameter
     return true;
 }
 

@@ -159,6 +159,7 @@ void CDCImplPrivate::setMyEvent(HANDLE evnt)
 
 void CDCImplPrivate::resetMyEvent(HANDLE evnt)
 {
+    (void)evnt;
     //TODO empty
 }
 

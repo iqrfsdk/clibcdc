@@ -140,7 +140,8 @@ PTEResponse CDCImpl::terminateProgrammingMode(void)
 
 static void verifyUpload(unsigned char target, const std::basic_string<unsigned char>& data)
 {
-    if ((target & 0x80) == 0) {
+  (void)data; //silence -Wunused-parameter
+  if ((target & 0x80) == 0) {
         std::ostringstream msg;
         msg << "Download target " << std::hex << std::showbase << target << " is not valid target for upload operation!";
         THROW_EXCEPT(CDCSendException, msg.str());
