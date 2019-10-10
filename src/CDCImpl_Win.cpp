@@ -60,7 +60,7 @@ int CDCImplPrivate::readMsgThread()
     unsigned char byteRead = '\0';
 
     BOOL fWaitingOnRead = FALSE;
-    DWORD occuredEvent = 0;
+    DWORD occurredEvent = 0;
 
     int count1 = 0;
     int count2 = 0;
@@ -83,14 +83,14 @@ int CDCImplPrivate::readMsgThread()
         waitEvents[0] = overlap.hEvent;
         waitEvents[1] = readEndEvent;
 
-        // signal for main thread to start incomming user requests
+        // signal for main thread to start incoming user requests
         setMyEvent(readStartEvent);
 
         //READ_BEGIN:
         bool run = true;
         while (run) {
             //cout << "WaitCommEvent" << endl;
-            DWORD waitEventResult = WaitCommEvent(portHandle, &occuredEvent, &overlap);
+            DWORD waitEventResult = WaitCommEvent(portHandle, &occurredEvent, &overlap);
 
             if (!waitEventResult) {
                 if (GetLastError() != ERROR_IO_PENDING)  {

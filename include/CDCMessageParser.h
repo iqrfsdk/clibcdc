@@ -15,7 +15,7 @@
  */
 
 /**
- * Incomming messages parser for CDCImpl class.
+ * Incoming messages parser for CDCImpl class.
  *
  * @author		Michal Konopa
  * @file		CDCMessageParser.h
