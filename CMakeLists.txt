@@ -17,9 +17,12 @@ if(NOT CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|MSBuild)")
 	elseif(COMPILER_SUPPORTS_CXX0X)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++0x")
 	else()
-			message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+		message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 	endif()
 endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror=format-security")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror=format-security")
 
 message(STATUS "CMAKE_CXX_STANDARD:     ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_FLAGS:         ${CMAKE_CXX_FLAGS}")
