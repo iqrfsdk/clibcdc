@@ -35,6 +35,8 @@
 #include <CDCReceiveException.h>
 #include "CDCTypes.h"
 
+#include <string>
+
 /**
  * Forward declaration of CDCImpl implementation class.
  */

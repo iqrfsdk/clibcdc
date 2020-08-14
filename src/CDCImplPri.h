@@ -25,7 +25,7 @@
 #include <map>
 #include <thread>
 #include <mutex>
-#include <mutex>
+#include <string>
 
 #ifdef WIN32
 //typedef void* HANDLE;

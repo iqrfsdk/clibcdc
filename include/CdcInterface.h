@@ -30,6 +30,7 @@
 #define __CDCInterface_h_
 
 #include <functional>
+#include <string>
 
 /**
  * USB device identification. Response information of "I-command"

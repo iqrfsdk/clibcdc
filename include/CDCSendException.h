@@ -29,7 +29,7 @@
 
 
 #include "CDCImplException.h"
-
+#include <string>
 
 /**
  * Exception, which occurs during sending command to COM-port.
