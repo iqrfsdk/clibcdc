@@ -283,7 +283,7 @@ void CDCMessageParserPrivate::initStatesInfoMap(void)
 
     unsigned int resUploadDownload[] = { 80, 81, 82, 83, 84, 85, 86,
                                          87, 88, 89, 90, 91, 92, 93};
-    insertStatesInfo(resUploadDownload, 17,  MSG_UPLOAD_DOWNLOAD);
+    insertStatesInfo(resUploadDownload, 14,  MSG_UPLOAD_DOWNLOAD);
 
     unsigned int dataDownload[] = { 96, 97 };
     insertStatesInfo(dataDownload, 2,  MSG_DOWNLOAD_DATA);
