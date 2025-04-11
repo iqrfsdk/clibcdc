@@ -270,7 +270,7 @@ CDCImplPrivate::CDCImplPrivate(const char* portName)
 void CDCImplPrivate::init()
 {
     //createNewLogFile();
-    m_transmitBuffer = ant_new unsigned char[1024];;
+    m_transmitBuffer = std::unique_ptr<unsigned char[]>(ant_new unsigned char[1024]);
     m_transmitBufferLen = 1024;
 
     portHandle = openPort(m_commPort);
@@ -327,7 +327,6 @@ CDCImplPrivate::~CDCImplPrivate()
     closePort(portHandle);
 
     delete msgParser;
-    delete[] m_transmitBuffer;
 
     //flog.close();
 }
@@ -550,13 +549,12 @@ CDCImplPrivate::BuffCommand CDCImplPrivate::commandToBuffer(Command& cmd)
 
     size_t sz = tmpStr.size();
     if (m_transmitBufferLen < sz) { //reallocate
-        delete[] m_transmitBuffer;
-        m_transmitBuffer = ant_new unsigned char[sz];
+        m_transmitBuffer = std::unique_ptr<unsigned char[]>(ant_new unsigned char[sz]);
         m_transmitBufferLen = static_cast<DWORD>(sz);
     }
 
     BuffCommand buffCmd;
-    buffCmd.cmd = m_transmitBuffer;
+    buffCmd.cmd = m_transmitBuffer.get();
     tmpStr.copy(buffCmd.cmd, sz);
     buffCmd.len = static_cast<DWORD>(sz);
 

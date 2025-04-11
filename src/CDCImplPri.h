@@ -26,6 +26,7 @@
 #include <thread>
 #include <mutex>
 #include <string>
+#include <memory>
 
 #ifdef WIN32
 //typedef void* HANDLE;
@@ -184,7 +185,7 @@ public:
     HANDLE openPort(const std::string& portName);
     void closePort(HANDLE & portHandle);
 
-    unsigned char* m_transmitBuffer;
+    std::unique_ptr<unsigned char[]> m_transmitBuffer;
     DWORD m_transmitBufferLen;
 
 };

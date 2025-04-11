@@ -385,11 +385,11 @@ HANDLE CDCImplPrivate::openPort(const std::string& portName)
         FILE_FLAG_OVERLAPPED, // overlapped operation
         NULL); //   must be NULL for comm devices
 
+    delete[] completePortName;
+
     //  Handle the error.
     if (portHandle == INVALID_HANDLE_VALUE)
         THROW_EXCEPT(CDCImplException, "Port handle creation failed with error " << GetLastError());
-
-    delete[] completePortName;
 
     DCB dcb;
     //SecureZeroMemory(&dcb, sizeof(DCB));
